@@ -162,10 +162,12 @@ RND_D3D12::PresentPipeline::PresentPipeline() {
 
     // upload screen indices
     ComPtr<ID3D12Resource> screenIndicesStaging;
+    ComPtr<ID3D12CommandAllocator> uploadBufferAllocator;
     {
         ID3D12Device* device = VRManager::instance().D3D12->GetDevice();
         ID3D12CommandQueue* queue = VRManager::instance().D3D12->GetCommandQueue();
-        RND_D3D12::CommandContext<true> uploadBufferContext(device, queue, [this, device, &screenIndicesStaging](ID3D12GraphicsCommandList* cmdList) {
+        device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&uploadBufferAllocator));
+        RND_D3D12::CommandContext<true> uploadBufferContext(device, queue, uploadBufferAllocator.Get(), [this, device, &screenIndicesStaging](ID3D12GraphicsCommandList* cmdList) {
             m_screenIndicesBuffer = D3D12Utils::CreateConstantBuffer(device, D3D12_HEAP_TYPE_DEFAULT, sizeof(screenIndices));
 
             screenIndicesStaging = D3D12Utils::CreateConstantBuffer(device, D3D12_HEAP_TYPE_UPLOAD, sizeof(screenIndices));

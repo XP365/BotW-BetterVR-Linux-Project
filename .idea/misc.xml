@@ -9,6 +9,7 @@
     </sourceRoots>
     <excludeRoots>
       <file path="$PROJECT_DIR$/Cemu" />
+      <file path="$PROJECT_DIR$/ReverseEngineering" />
     </excludeRoots>
   </component>
 </project>

@@ -59,11 +59,13 @@ void VkDeviceOverrides::CmdClearColorImage(const vkroots::VkDeviceDispatch* pDis
             foundResolutions--;
             Log::print("Found capture texture {}: res={}x{}, format={}", captureIdx, capture.foundSize.width, capture.foundSize.height, capture.format);
 
+            ComPtr<ID3D12CommandAllocator> cmdAllocator;
             {
                 ID3D12Device* d3d12Device = VRManager::instance().D3D12->GetDevice();
                 ID3D12CommandQueue* d3d12Queue = VRManager::instance().D3D12->GetCommandQueue();
+                d3d12Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&cmdAllocator));
 
-                RND_D3D12::CommandContext<true> transitionInitialTextures(d3d12Device, d3d12Queue, [&capture](ID3D12GraphicsCommandList* cmdList) {
+                RND_D3D12::CommandContext<true> transitionInitialTextures(d3d12Device, d3d12Queue, cmdAllocator.Get(), [&capture](ID3D12GraphicsCommandList* cmdList) {
                     cmdList->SetName(L"transitionInitialTextures");
                     capture.sharedTexture->d3d12TransitionLayout(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
                     capture.sharedTexture->d3d12SignalFence(2);

@@ -9,7 +9,6 @@ struct CaptureTexture {
     VkFormat format;
     VkExtent2D minSize;
     std::unique_ptr<SharedTexture> sharedTexture;
-    //std::unique_ptr<Texture> d3d12Texture;
 
     // current frame state
     std::atomic<VkCommandBuffer> captureCmdBuffer = VK_NULL_HANDLE;

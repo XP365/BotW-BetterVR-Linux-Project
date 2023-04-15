@@ -17,13 +17,14 @@ RND_Renderer::~RND_Renderer() {
 
 void RND_Renderer::StartFrame() {
     checkAssert(m_textures.empty(), "Need to finish rendering the previous frame before starting a new one");
-    m_stage = RenderStage::STARTED;
 
     XrFrameWaitInfo waitFrameInfo = { XR_TYPE_FRAME_WAIT_INFO };
     checkXRResult(xrWaitFrame(m_session, &waitFrameInfo, &m_frameState), "Failed to wait for next frame!");
 
     XrFrameBeginInfo beginFrameInfo = { XR_TYPE_FRAME_BEGIN_INFO };
     checkXRResult(xrBeginFrame(m_session, &beginFrameInfo), "Couldn't begin OpenXR frame!");
+
+    VRManager::instance().D3D12->StartFrame();
 
     VRManager::instance().XR->UpdateTime(VRManager::instance().Hooks->s_eyeSide, m_frameState.predictedDisplayTime);
 
@@ -54,19 +55,22 @@ void RND_Renderer::EndFrame() {
             XrView view = VRManager::instance().XR->GetPredictedView(eye);
 
             // fixme: semaphores need to be adjusted so that they can be rendered to two eyes in one frame, or two SharedTextures need to be rendered to one eye each
-            for (SharedTexture* texture : m_textures) {
-                ID3D12Device* device = VRManager::instance().D3D12->GetDevice();
-                ID3D12CommandQueue* queue = VRManager::instance().D3D12->GetCommandQueue();
-                RND_D3D12::CommandContext<false> renderSharedTexture(device, queue, [this, texture, swapchain](ID3D12GraphicsCommandList* cmdList) {
-                    cmdList->SetName(L"RenderSharedTexture");
-                    texture->d3d12WaitForFence(1);
-                    texture->d3d12TransitionLayout(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-                    m_presentPipeline->BindAttachment(0, texture->d3d12GetTexture());
-                    m_presentPipeline->BindTarget(0, swapchain->GetTexture(), swapchain->GetFormat());
-                    m_presentPipeline->Render(cmdList, swapchain->GetTexture());
-                    texture->d3d12TransitionLayout(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
-                    texture->d3d12SignalFence(0);
-                });
+            if (eye == OpenXR::EyeSide::RIGHT) {
+                for (SharedTexture* texture : m_textures) {
+                    ID3D12Device* device = VRManager::instance().D3D12->GetDevice();
+                    ID3D12CommandQueue* queue = VRManager::instance().D3D12->GetCommandQueue();
+                    ID3D12CommandAllocator* allocator = VRManager::instance().D3D12->GetFrameAllocator();
+                    RND_D3D12::CommandContext<false> renderSharedTexture(device, queue, allocator, [this, texture, swapchain](ID3D12GraphicsCommandList* cmdList) {
+                        cmdList->SetName(L"RenderSharedTexture");
+                        texture->d3d12WaitForFence(1);
+                        texture->d3d12TransitionLayout(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+                        m_presentPipeline->BindAttachment(0, texture->d3d12GetTexture());
+                        m_presentPipeline->BindTarget(0, swapchain->GetTexture(), swapchain->GetFormat());
+                        m_presentPipeline->Render(cmdList, swapchain->GetTexture());
+                        texture->d3d12TransitionLayout(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
+                        texture->d3d12SignalFence(0);
+                    });
+                }
             }
 
             // float leftHalfFOV = glm::degrees(frameViews[0].fov.angleLeft);
@@ -99,6 +103,8 @@ void RND_Renderer::EndFrame() {
     frameEndInfo.layerCount = (uint32_t)m_layers.size();
     frameEndInfo.layers = m_layers.data();
     checkXRResult(xrEndFrame(m_session, &frameEndInfo), "Failed to render texture!");
+
+    VRManager::instance().D3D12->EndFrame();
 
     m_textures.clear();
     m_layers.clear();

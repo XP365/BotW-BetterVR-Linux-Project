@@ -2,11 +2,6 @@
 
 #include "d3d12.h"
 
-enum class RenderStage {
-    NONE,
-    STARTED,
-    RENDERED,
-};
 
 class RND_Renderer {
 public:
@@ -25,6 +20,4 @@ protected:
     std::vector<XrCompositionLayerBaseHeader*> m_layers;
     std::array<XrCompositionLayerProjectionView, 2> m_frameProjectionViews{};
     XrFrameState m_frameState = { XR_TYPE_FRAME_STATE };
-
-    RenderStage m_stage = RenderStage::NONE;
 };

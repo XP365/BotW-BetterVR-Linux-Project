@@ -15,11 +15,15 @@ OpenXR::OpenXR() {
 
     // Create instance with required extensions
     bool d3d12Supported = false;
+    bool depthSupported = false;
     bool timeConvSupported = false;
     bool debugUtilsSupported = false;
     for (XrExtensionProperties& extensionProperties : instanceExtensions) {
         if (strcmp(extensionProperties.extensionName, XR_KHR_D3D12_ENABLE_EXTENSION_NAME) == 0) {
             d3d12Supported = true;
+        }
+        if (strcmp(extensionProperties.extensionName, XR_KHR_COMPOSITION_LAYER_DEPTH_EXTENSION_NAME) == 0) {
+            depthSupported = true;
         }
         else if (strcmp(extensionProperties.extensionName, XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME) == 0) {
             timeConvSupported = true;
@@ -33,6 +37,10 @@ OpenXR::OpenXR() {
         Log::print("OpenXR runtime doesn't support D3D12 (XR_KHR_D3D12_ENABLE)!");
         throw std::runtime_error("Current OpenXR runtime doesn't support Direct3D 12 (XR_KHR_D3D12_ENABLE). See the Github page's troubleshooting section for a solution!");
     }
+    if (!depthSupported) {
+        Log::print("OpenXR runtime doesn't support depth composition layers (XR_KHR_COMPOSITION_LAYER_DEPTH)!");
+        throw std::runtime_error("Current OpenXR runtime doesn't support depth composition layers (XR_KHR_COMPOSITION_LAYER_DEPTH). See the Github page's troubleshooting section for a solution!");
+    }
     if (!timeConvSupported) {
         Log::print("OpenXR runtime doesn't support converting time from/to XrTime (XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME)!");
         throw std::runtime_error("Current OpenXR runtime doesn't support converting time from/to XrTime (XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME). See the Github page's troubleshooting section for a solution!");
@@ -41,7 +49,7 @@ OpenXR::OpenXR() {
         Log::print("OpenXR runtime doesn't support debug utils (XR_EXT_DEBUG_UTILS)! Errors/debug information will no longer be able to be shown!");
     }
 
-    std::vector<const char*> enabledExtensions = { XR_KHR_D3D12_ENABLE_EXTENSION_NAME, XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME };
+    std::vector<const char*> enabledExtensions = { XR_KHR_D3D12_ENABLE_EXTENSION_NAME, XR_KHR_COMPOSITION_LAYER_DEPTH_EXTENSION_NAME, XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME };
     if (debugUtilsSupported) enabledExtensions.emplace_back(XR_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
     XrInstanceCreateInfo xrInstanceCreateInfo = { XR_TYPE_INSTANCE_CREATE_INFO };
@@ -204,7 +212,7 @@ void OpenXR::UpdatePoses(EyeSide side) {
     viewLocateInfo.displayTime = m_frameTimes[side];
     viewLocateInfo.space = m_stageSpace; // locate the rendering views relative to the room, not the headset center
     XrViewState viewState = { XR_TYPE_VIEW_STATE };
-    uint32_t viewCount = views.size();
+    uint32_t viewCount = (uint32_t)views.size();
     checkXRResult(xrLocateViews(m_session, &viewLocateInfo, &viewState, viewCount, &viewCount, views.data()), "Failed to get view information!");
     if ((viewState.viewStateFlags & XR_VIEW_STATE_ORIENTATION_VALID_BIT) == 0)
         return;

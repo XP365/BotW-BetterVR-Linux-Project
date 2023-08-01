@@ -4,84 +4,118 @@ moduleMatches = 0x6267BFD0
 .origin = codecave
 
 
-0x030C16D0 = sead_PerspectiveProjection_setFovy:
+ASPECT_STACK_OFFSET = 0x04
+FOVY_STACK_OFFSET = 0x08
+OFFSET_X_STACK_OFFSET = 0x0C
+OFFSET_Y_STACK_OFFSET = 0x10
 
-default_AspectRatio:
-.float 1.77777779
-default_FovY:
-.float 1.04719758
-default_OffsetX:
-.float 0.0
-default_OffsetY:
-.float 0.0
 
-ASPECT_RATIO_STACK_OFFSET = 0x14
-FOVY_STACK_OFFSET = 0x18
-OFFSET_X_STACK_OFFSET = 0x1C
-OFFSET_Y_STACK_OFFSET = 0x20
-
-updateLookAtProjectionMatrix:
+updateCameraOffset:
 mflr r0
-stwu r1, -0x28(r1)
-stw r0, 0x2C(r1)
+stwu r1, -0x18(r1)
+stw r0, 0x1C(r1)
 
-mr r0, r28
-lis r28, default_AspectRatio@ha
-lfs f0, default_AspectRatio@l(r28)
-stfs f0, ASPECT_RATIO_STACK_OFFSET(r1)
-lis r28, default_FovY@ha
-lfs f0, default_FovY@l(r28)
-stfs f0, FOVY_STACK_OFFSET(r1)
-lis r28, default_OffsetX@ha
-lfs f0, default_OffsetX@l(r28)
-stfs f0, OFFSET_X_STACK_OFFSET(r1)
-lis r28, default_OffsetY@ha
-lfs f0, default_OffsetY@l(r28)
-stfs f0, OFFSET_Y_STACK_OFFSET(r1)
-mr r28, r0
-
-addi r28, r1, 0x14
-bl import.coreinit.hook_UpdateProjectionMatrix
-
-; store dirty flag
-li r28, 1
-stb r28, 8(r30)
-
-; store offsetX
-lfs f0, OFFSET_X_STACK_OFFSET(r1)
-stfs f0, 0xB8(r30)
-
-; store offsetY
-lfs f12, OFFSET_Y_STACK_OFFSET(r1)
-stfs f12, 0xBC(r30)
-
-; set fovY
-lfs f1, FOVY_STACK_OFFSET(r1)
-addi r3, r30, 8
-bl sead_PerspectiveProjection_setFovy
-
-; store dirty flag
-li r28, 1
-stb r28, 8(r30)
-
-; store near
-lfs f13, 0x60(r31)
-stfs f13, 0x9C(r30)
-
-; store far
-lfs f0, 0x64(r31)
-stfs f0, 0xA0(r30)
-
-; store aspectRatio
-lfs f12, ASPECT_RATIO_STACK_OFFSET(r1)
-stfs f12, 0xB4(r30)
+addi r11, r1, 0x04
+bl import.coreinit.hook_UpdateCameraOffset
 
 
-lwz r0, 0x2C(r1)
+lwz r11, 0xCD4(r29)
+lfs f10, FOVY_STACK_OFFSET(r1)
+stfs f10, 0x68(r11)
+lfs f9, OFFSET_X_STACK_OFFSET(r1)
+stfs f9, 0x6C(r11)
+lfs f10, OFFSET_Y_STACK_OFFSET(r1)
+stfs f10, 0x70(r11)
+
+lwz r0, 0x1C(r1)
 mtlr r0
-addi r1, r1, 0x28
+addi r1, r1, 0x18
 blr
 
-0x0386CFD0 = b skipExistingCode
-0x0386D024 = skipExistingCode:
-0x0386D024 = bla updateLookAtProjectionMatrix
+0x02C07708 = bla updateCameraOffset
+
+
+updateCameraAspectRatio:
+mflr r0
+stwu r1, -0x10(r1)
+stw r0, 0x14(r1)
+
+addi r28, r1, 0x04
+bl import.coreinit.hook_CalculateCameraAspectRatio
+
+lfs f12, ASPECT_STACK_OFFSET(r1)
+stfs f12, 0xB4(r30)
+
+lwz r0, 0x14(r1)
+mtlr r0
+addi r1, r1, 0x10
+blr
+
+0x0386D024 = bla updateCameraAspectRatio
+
+
+
+; -----------------------------------------------------------
+
+loadLineCharacter:
+.int 10
+.align 4
+; r0 should be modifiable
+; r3 = format string
+; r4 = int arg1
+; r5 = int arg2
+; f1 = float arg1
+; f2 = float arg2
+printToLog:
+mflr r0
+stwu r1, -0x10(r1)
+stw r0, 0x14(r1)
+stw r5, 0x8(r1)
+stw r6, 0xC(r1)
+
+lis r6, loadLineCharacter@ha
+lwz r6, loadLineCharacter@l(r6)
+crxor 4*cr1+eq, 4*cr1+eq, 4*cr1+eq
+bl import.coreinit.OSReport
+
+lwz r6, 0xC(r1)
+lwz r5, 0x8(r1)
+lwz r0, 0x14(r1)
+mtlr r0
+addi r1, r1, 0x10
+blr
+
+loadLineFormat:
+.string "sead::PerspectiveProjection::setFovy_(this = 0x%08x fovRadians = %f offsetX = %f) LR = 0x%08x %c"
+printSetFovY:
+mflr r0
+stwu r1, -0x10(r1)
+stw r0, 0x14(r1)
+
+stw r3, 0x8(r1)
+stw r4, 0xC(r1)
+stw r5, 0x10(r1)
+
+; load offset X from this sead::PerspectiveProjection instance
+fmr f31, f2
+lfs f2, 0xB0(r3)
+
+mr r4, r3
+lwz r5, 0x10+0x24(r1) ; load LR from parent stack
+lis r3, loadLineFormat@ha
+addi r3, r3, loadLineFormat@l
+bl printToLog
+
+fmr f2, f31
+fmuls f31, f1, f0
+
+lwz r3, 0x8(r1)
+lwz r4, 0xC(r1)
+lwz r5, 0x10(r1)
+
+lwz r0, 0x14(r1)
+mtlr r0
+addi r1, r1, 0x10
+blr
+
+0x030C16F8 = bla printSetFovY

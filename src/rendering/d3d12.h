@@ -38,8 +38,8 @@ public:
         friend class Texture;
 
     public:
-        PresentPipeline(RND_Renderer* pRenderer);
-        ~PresentPipeline();
+        explicit PresentPipeline(RND_Renderer* pRenderer);
+        ~PresentPipeline() = default;
 
         void BindAttachment(uint32_t attachmentIdx, ID3D12Resource* srcTexture, DXGI_FORMAT overwriteFormat = DXGI_FORMAT_UNKNOWN);
         void BindTarget(uint32_t targetIdx, ID3D12Resource* dstTexture, DXGI_FORMAT overwriteFormat = DXGI_FORMAT_UNKNOWN);

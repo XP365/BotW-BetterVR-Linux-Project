@@ -37,10 +37,15 @@ newRotY:
 .float 0.0
 newRotZ:
 .float 0.0
+newAspectRatio:
+.float 0.0
+newFovY:
+.float 0.0
 
 CAM_OFFSET_POS = 0x5C0
 CAM_OFFSET_TARGET = 0x5CC
 CAM_OFFSET_FOV = 0x5E4
+CAM_OFFSET_ASPECT_RATIO = 0x5EC
 
 
 tempStuff:
@@ -71,7 +76,6 @@ stfs f0, oldTargetZ@l(r7)
 
 lis r7, tempStuff@ha
 stw r31, tempStuff@l(r7)
-
 
 lis r7, continueCodeAddr@ha
 addi r7, r7, continueCodeAddr@l
@@ -108,6 +112,14 @@ lis r7, newTargetZ@ha
 lfs f0, newTargetZ@l(r7)
 stfs f0, CAM_OFFSET_TARGET+0x8(r31)
 
+; lis r7, newFovY@ha
+; lfs f0, newFovY@l(r7)
+; stfs f0, CAM_OFFSET_FOV(r31)
+;
+; lis r7, newAspectRatio@ha
+; lfs f0, newAspectRatio@l(r7)
+; stfs f0, CAM_OFFSET_ASPECT_RATIO(r31)
+
 blr
 
 0x02C05500 = bla calcCameraMatrix
@@ -116,6 +128,10 @@ blr
 
 changeCameraRotation:
 stfs f10, 0x18(r31)
+
+mflr r8
+bl import.coreinit.hook_UpdateCameraRotation
+mtlr r8
 
 lis r8, newRotX@ha
 lfs f10, newRotX@l(r8)

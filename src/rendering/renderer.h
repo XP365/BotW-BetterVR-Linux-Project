@@ -78,6 +78,7 @@ protected:
         [[nodiscard]] XrFovf GetCurrentFOV() const { return m_currViews[m_currentSide].fov; }
         [[nodiscard]] XrFovf GetFOV(OpenXR::EyeSide side) const { return m_currViews[side].fov; }
         [[nodiscard]] XrPosef GetCurrentPose() const { return m_currViews[m_currentSide].pose; }
+        [[nodiscard]] XrPosef GetPose(OpenXR::EyeSide side) const { return m_currViews[side].pose; }
         [[nodiscard]] XrPosef GetOtherPose() const { return m_currViews[(m_currentSide == OpenXR::EyeSide::LEFT) ? OpenXR::EyeSide::RIGHT : OpenXR::EyeSide::LEFT].pose; }
 
     private:

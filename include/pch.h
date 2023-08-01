@@ -67,6 +67,8 @@ struct data_VRCameraOut {
     float rotX;
     float rotY;
     float rotZ;
+    float aspectRatio;
+    float fovY;
 };
 
 struct data_VRProjectionMatrixOut {
@@ -74,6 +76,18 @@ struct data_VRProjectionMatrixOut {
     float fovY;
     float offsetX;
     float offsetY;
+};
+
+struct data_VRCameraOffsetOut {
+    float aspectRatio;
+    float fovY;
+    float offsetX;
+    float offsetY;
+};
+
+struct data_VRCameraAspectRatioOut {
+    float aspectRatio;
+    float fovY;
 };
 
 #include "cemu.h"

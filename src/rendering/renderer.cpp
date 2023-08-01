@@ -66,13 +66,13 @@ void RND_Renderer::EndFrame() {
 
     std::vector<XrCompositionLayerBaseHeader*> compositionLayers;
 
+    // todo: currently ignores m_frameState.shouldRender, but that's probably fine
     XrCompositionLayerQuad layer2D = { XR_TYPE_COMPOSITION_LAYER_QUAD };
     if (m_layer2D.GetStatus() == Layer::Status::RENDERING) {
         // The HUD/menus aren't eye-specific, so just present the most recent one for both eyes at once
         m_layer2D.FlipSide();
         m_layer2D.Render(m_layer2D.GetCurrentSide());
         layer2D = m_layer2D.FinishRendering();
-        Log::print("Finished rendering 2D");
         m_layer2D.FlipSide();
         compositionLayers.emplace_back(reinterpret_cast<XrCompositionLayerBaseHeader*>(&layer2D));
     }
@@ -83,7 +83,6 @@ void RND_Renderer::EndFrame() {
         m_layer3D.Render(OpenXR::EyeSide::LEFT);
         m_layer3D.Render(OpenXR::EyeSide::RIGHT);
         layer3DViews = m_layer3D.FinishRendering();
-        Log::print("Finished rendering 3D");
         layer3D.layerFlags = NULL;
         layer3D.space = VRManager::instance().XR->m_stageSpace;
         layer3D.viewCount = (uint32_t)layer3DViews.size();
@@ -115,16 +114,18 @@ void RND_Renderer::Layer::UpdatePoses() {
         return; // what should occur when the orientation is invalid? keep rendering using old values?
 
     m_currViews = views;
-    //    {
-    //        glm::fvec3 positions{ (m_currViews[0].pose.position.x, m_currViews[0].pose.position.y, m_currViews[0].pose.position.z) };
-    //        positions = positions * 10.0f;
-    //        m_currViews[0].pose.position = { positions.x, positions.y, positions.z };
-    //    }
-    //    {
-    //        glm::fvec3 positions{ (m_currViews[1].pose.position.x, m_currViews[1].pose.position.y, m_currViews[1].pose.position.z) };
-    //        positions = positions * 10.0f;
-    //        m_currViews[1].pose.position = { positions.x, positions.y, positions.z };
-    //    }
+
+    // todo: Remove this code comment if the projection matrix switching is fixed. It's useful for exemplifying pose switching mistakes.
+//    {
+//        glm::fvec3 positions{ (m_currViews[0].pose.position.x, m_currViews[0].pose.position.y, m_currViews[0].pose.position.z) };
+//        positions = positions * 10.0f;
+//        m_currViews[0].pose.position = { positions.x, positions.y, positions.z };
+//    }
+//    {
+//        glm::fvec3 positions{ (m_currViews[1].pose.position.x, m_currViews[1].pose.position.y, m_currViews[1].pose.position.z) };
+//        positions = positions * 10.0f;
+//        m_currViews[1].pose.position = { positions.x, positions.y, positions.z };
+//    }
 }
 
 RND_Renderer::Layer3D::Layer3D(): Layer() {

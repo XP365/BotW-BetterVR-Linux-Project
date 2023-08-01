@@ -195,9 +195,6 @@ RND_D3D12::PresentPipeline<depth>::PresentPipeline(RND_Renderer* pRenderer) {
     }
 }
 
-template <bool depth>
-RND_D3D12::PresentPipeline<depth>::~PresentPipeline() {
-}
 
 // These change the CPU handles that'll later be used for binding the actual assets
 template <bool depth>

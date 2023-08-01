@@ -37,8 +37,6 @@ void VkDeviceOverrides::DestroyImage(const vkroots::VkDeviceDispatch* pDispatch,
 }
 
 
-std::array<bool, 2> flipsides = { false, false };
-
 void VkDeviceOverrides::CmdClearColorImage(const vkroots::VkDeviceDispatch* pDispatch, VkCommandBuffer commandBuffer, VkImage image, VkImageLayout imageLayout, const VkClearColorValue* pColor, uint32_t rangeCount, const VkImageSubresourceRange* pRanges) {
     // check for magical clear values
     if (pColor->float32[1] >= 0.12 && pColor->float32[1] <= 0.13 && pColor->float32[2] >= 0.97 && pColor->float32[2] <= 0.99) {
@@ -56,7 +54,7 @@ void VkDeviceOverrides::CmdClearColorImage(const vkroots::VkDeviceDispatch* pDis
         // this is a hack since the game will eventually overlap multiple textures on top of
         if (capture.initialized && capture.foundImage != image) {
             // clear the image to be transparent to allow for the HUD to be rendered on top of it which results in a transparent HUD layer
-            const_cast<VkClearColorValue*>(pColor)[0] = { 1.0f, 1.0f, 0.5f, 0.0f };
+            const_cast<VkClearColorValue*>(pColor)[0] = { 0.0f, 0.0f, 0.0f, 0.0f };
             return pDispatch->CmdClearColorImage(commandBuffer, image, imageLayout, pColor, rangeCount, pRanges);
         }
 
@@ -114,11 +112,12 @@ void VkDeviceOverrides::CmdClearColorImage(const vkroots::VkDeviceDispatch* pDis
             VRManager::instance().XR->GetRenderer()->m_layer2D.AddTexture(VRManager::instance().XR->GetRenderer()->m_layer2D.GetCurrentSide(), capture.sharedTextures[VRManager::instance().XR->GetRenderer()->m_layer2D.GetCurrentSide()].get());
             VRManager::instance().XR->GetRenderer()->m_layer2D.FlipSide();
 
-            const_cast<VkClearColorValue*>(pColor)[0] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            const_cast<VkClearColorValue*>(pColor)[0] = { 1.0f, 1.0f, 1.0f, 1.0f };
             pDispatch->CmdClearColorImage(commandBuffer, image, imageLayout, pColor, rangeCount, pRanges);
         }
         else {
             capture.isCapturingSharedTextures[VRManager::instance().XR->GetRenderer()->m_layer3D.GetCurrentSide()] = true;
+            Log::print("[{}] Capturing texture {}", VRManager::instance().XR->GetRenderer()->m_layer3D.GetCurrentSide() == OpenXR::EyeSide::LEFT ? "left" : "right", captureIdx);
             capture.sharedTextures[VRManager::instance().XR->GetRenderer()->m_layer3D.GetCurrentSide()]->CopyFromVkImage(commandBuffer, image);
             VRManager::instance().XR->GetRenderer()->m_layer3D.AddTexture(VRManager::instance().XR->GetRenderer()->m_layer3D.GetCurrentSide(), capture.sharedTextures[VRManager::instance().XR->GetRenderer()->m_layer3D.GetCurrentSide()].get());
             // delay flipping until depth buffer is also captured
@@ -189,6 +188,7 @@ void VRLayer::VkDeviceOverrides::CmdClearDepthStencilImage(const vkroots::VkDevi
             lockImageResolutions.unlock();
         }
         capture.foundImage = image;
+        Log::print("[{}] Capturing depth texture {}", VRManager::instance().XR->GetRenderer()->m_layer3D.GetCurrentSide() == OpenXR::EyeSide::LEFT ? "left" : "right", captureIdx);
         capture.isCapturingSharedTextures[VRManager::instance().XR->GetRenderer()->m_layer3D.GetCurrentSide()] = true;
         capture.sharedTextures[VRManager::instance().XR->GetRenderer()->m_layer3D.GetCurrentSide()]->CopyFromVkImage(commandBuffer, image);
         capture.captureCmdBuffer = commandBuffer;

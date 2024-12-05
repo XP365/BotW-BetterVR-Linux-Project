@@ -125,11 +125,11 @@ void CemuHooks::hook_CreateNewActor(PPCInterpreter_t* hCPU) {
     hCPU->instructionPointer = hCPU->sprNew.LR;
 
     // test if controller is connected
-    if (VRManager::instance().XR->m_input.controllers[0].select.currentState == XR_TRUE || VRManager::instance().XR->m_input.controllers[0].select.changedSinceLastSync == XR_TRUE) {
+    if (VRManager::instance().XR->m_input.controllers[0].select.currentState == XR_TRUE && VRManager::instance().XR->m_input.controllers[0].select.changedSinceLastSync == XR_TRUE) {
         Log::print("Trying to spawn new thing!");
         hCPU->gpr[3] = 1;
     }
-    else if (VRManager::instance().XR->m_input.controllers[1].select.currentState == XR_TRUE || VRManager::instance().XR->m_input.controllers[1].select.changedSinceLastSync == XR_TRUE) {
+    else if (VRManager::instance().XR->m_input.controllers[1].select.currentState == XR_TRUE && VRManager::instance().XR->m_input.controllers[1].select.changedSinceLastSync == XR_TRUE) {
         Log::print("Trying to spawn new thing!");
         hCPU->gpr[3] = 1;
     }

@@ -15,10 +15,6 @@ AlternatingEyeRenderingSetting:
 .int $AER
 
 
-testStuff:
-blr
-
-
 vr_updateSettings:
 addi r1, r1, -0x08
 stw r3, 0x04(r1)

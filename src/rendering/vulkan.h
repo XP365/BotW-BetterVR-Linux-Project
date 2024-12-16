@@ -1,6 +1,14 @@
 #pragma once
 #include "texture.h"
 
+using ValueVariant = std::variant<uint32_t, float, XrVector3f, std::string>;
+
+struct EntityValue {
+    std::string value_name;
+    uint32_t value_address;
+    std::variant<uint32_t, float, XrVector3f, std::string> value;
+};
+
 class RND_Vulkan {
     friend class ImGuiOverlay;
 
@@ -12,6 +20,14 @@ public:
     public:
         explicit ImGuiOverlay(VkCommandBuffer cb, uint32_t width, uint32_t height, VkFormat format);
         ~ImGuiOverlay();
+
+
+        std::string m_filter;
+        std::unordered_map<std::string, std::vector<EntityValue>> m_entities;
+
+
+        void AddEntity(::std::string entity, ::std::string name, uint32_t address, ValueVariant& value);
+        void RemoveEntity(std::string entity);
 
         void BeginFrame();
         void Draw3DLayerAsBackground(VkCommandBuffer cb, VkImage srcImage, float aspectRatio);

@@ -3,6 +3,7 @@
 #include <atomic>
 #include <string>
 #include <variant>
+#include <functional>
 #include <type_traits>
 
 #include <Windows.h>

@@ -1,9 +1,5 @@
-#include
-#include
 #include "instance.h"
 #include "vulkan.h"
-
-#include <functional>
 
 RND_Vulkan::ImGuiOverlay::ImGuiOverlay(VkCommandBuffer cb, uint32_t width, uint32_t height, VkFormat format) {
     m_context = ImGui::CreateContext();
@@ -266,9 +262,42 @@ void RND_Vulkan::ImGuiOverlay::BeginFrame() {
         ImGui::PopStyleVar();
     }
 
-    ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
 
-    ImGui::Begin("HUD");
+    ImGui::Begin("Entity Inspector");
+
+    // ImGui::BeginListBox("Entities");
+    for (auto& [entity, values] : m_entities) {
+        ImGui::Text(entity.c_str());
+        ImGui::PushID(entity.c_str());
+
+        // ImGui::BeginGroup();
+        for (auto& value : values) {
+            // ImGui::InputInt("Address", (int*)&value.value_address);
+            std::visit([&](auto&& arg) {
+                using T = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<T, uint32_t>) {
+                    ImGui::InputInt(value.value_name.c_str(), (int*)&arg);
+                }
+                else if constexpr (std::is_same_v<T, float>) {
+                    ImGui::InputFloat(value.value_name.c_str(), &arg);
+                }
+                else if constexpr (std::is_same_v<T, XrVector3f>) {
+                    ImGui::InputFloat3(value.value_name.c_str(), &arg.x);
+                }
+                else if constexpr (std::is_same_v<T, std::string>) {
+                    ImGui::Text(value.value_name.c_str());
+                }
+            }, value.value);
+        }
+        // ImGui::EndGroup();
+        ImGui::PopID();
+
+        ImGui::Separator();
+    }
+    // ImGui::EndListBox();
+
+    ImGui::End();
 }
 
 void RND_Vulkan::ImGuiOverlay::Draw3DLayerAsBackground(VkCommandBuffer cb, VkImage srcImage, float aspectRatio) {
@@ -290,8 +319,6 @@ void RND_Vulkan::ImGuiOverlay::DrawHUDLayerAsBackground(VkCommandBuffer cb, VkIm
 }
 
 void RND_Vulkan::ImGuiOverlay::Render() {
-    ImGui::End();
-
     ImGui::Render();
 }
 
@@ -388,7 +415,7 @@ void RND_Vulkan::ImGuiOverlay::UpdateControls() {
 
 // Memory Viewer/Editor
 
-void RND_Vulkan::ImGuiOverlay::AddEntity(const std::string& entity, const std::string& name, uint32_t address, ValueVariant::variant& value) {
+void RND_Vulkan::ImGuiOverlay::AddEntity(std::string entity, std::string name, uint32_t address, ValueVariant& value) {
     if (m_entities.find(entity) == m_entities.end()) {
         m_entities[entity] = {};
     }
@@ -396,6 +423,6 @@ void RND_Vulkan::ImGuiOverlay::AddEntity(const std::string& entity, const std::s
     m_entities[entity].emplace_back(name, address, value);
 }
 
-void RND_Vulkan::ImGuiOverlay::RemoveEntity(const std::string& entity) {
+void RND_Vulkan::ImGuiOverlay::RemoveEntity(std::string entity) {
     m_entities.erase(entity);
 }

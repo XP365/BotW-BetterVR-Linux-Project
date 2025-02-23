@@ -32,7 +32,7 @@ Swapchain<T>::Swapchain(uint32_t width, uint32_t height, uint32_t sampleCount): 
     swapchainCreateInfo.format = m_format;
     swapchainCreateInfo.mipCount = 1;
     swapchainCreateInfo.faceCount = 1;
-    swapchainCreateInfo.usageFlags = D3D12Utils::IsDepthFormat(T) ? XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
+    swapchainCreateInfo.usageFlags = (D3D12Utils::IsDepthFormat(T) ? XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT) | XR_SWAPCHAIN_USAGE_SAMPLED_BIT;
     swapchainCreateInfo.createFlags = 0;
     checkXRResult(xrCreateSwapchain(VRManager::instance().XR->GetSession(), &swapchainCreateInfo, &m_swapchain), "Failed to create OpenXR swapchain images!");
 

@@ -214,3 +214,23 @@ addi r1, r1, 0x20
 blr
 
 0x020081AC = ba custom_PlayerOrEnemy__dropWeapon
+
+; =========================================
+
+hook_changeWeaponScale:
+stw r9, 0x27C(r31)
+
+mflr r0
+stwu r1, -0x10(r1)
+stw r0, 0x14(r1)
+stw r3, 0x08(r1)
+
+bla import.coreinit.hook_SetPlayerWeaponScale
+
+lwz r3, 0x08(r1)
+lwz r0, 0x14(r1)
+addi r1, r1, 0x10
+mtlr r0
+blr
+
+0x024A92D4 = bla hook_changeWeaponScale

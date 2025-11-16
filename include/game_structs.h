@@ -165,7 +165,6 @@ enum ActorFlags3 : int32_t {
     ActorFlags3_80000000 = 0x80000000,
 };
 
-
 struct ActorWiiU : BaseProc {
     PADDED_BYTES(0xEC, 0xF0);
     uint32_t physicsMainBodyPtr; // 0xF4

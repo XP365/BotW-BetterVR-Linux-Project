@@ -3,7 +3,6 @@ moduleMatches = 0x6267BFD0
 
 .origin = codecave
 
-
 ; Disable jump button setting from in-game options
 ; todo: test whether this is actually working
 
@@ -68,15 +67,12 @@ moduleMatches = 0x6267BFD0
 ;0x24ae758 = nop ; sth r11, 0xA16(r31)
 
 
-
-
 ; this forces the model bind function to never try to bind it to a specific bone of the actor
 ; 0x31258A4 = jumpLocation:
 ; 0x0312578C = b jumpLocation
 
 ; remove binded weapon
 ; 0x03125880 = nop
-
 
 
 ;0x020661B8 = cmpwi r1, 0
@@ -88,14 +84,10 @@ moduleMatches = 0x6267BFD0
 ;0x024AC8DC = cmpw r3, r3
 ;0x024AC7B4 = nop
 
-
-
-
 ;0x02C18754 = nop
 ;0x02C18764 = nop
 
 ;0x034B69C0 = li r0, 1
-
 
 ;0x02C196A4 = li r3, 1
 

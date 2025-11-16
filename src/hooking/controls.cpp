@@ -234,9 +234,6 @@ void CemuHooks::hook_InjectXRInput(PPCInterpreter_t* hCPU) {
 }
 
 
-
-
-
 // some ideas:
 // - quickly pressing the grip button without a weapon while there's a nearby weapon and there's enough slots = pick up weapon
 // - holding the grip button without a weapon while there's a nearby weapon = temporarily hold weapon

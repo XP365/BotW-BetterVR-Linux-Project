@@ -11,8 +11,6 @@ moduleMatches = 0x6267BFD0
 ; which breaks dungeon doors and many other things
 0x037A1B3C = li r12, 4
 
-
-
 ; EventTag::shouldSkipJobPush
 ;0x0310C670 = lis r3, currentEyeSide@ha
 ;0x0310C674 = li r3, 1 ; lwz r3, currentEyeSide@l(r3)
@@ -39,7 +37,6 @@ beqlr
 addi r0, r12, -1
 stb r0, 0x42C(r3)
 blr
-
 
 ;0x0379E270 = ba custom_Actor_decrementSkipJobPushTimer
 

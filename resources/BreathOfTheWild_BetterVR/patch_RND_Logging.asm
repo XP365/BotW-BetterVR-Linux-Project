@@ -411,7 +411,6 @@ blr
 ; LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT
 ; ===============================================================================
 ;
-;
 ; ===============================================================================
 ; RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT
 ; clear() wrote 00000000 to the RenderSceneContext
@@ -469,28 +468,6 @@ blr
 ; RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT
 ; ===============================================================================
 ;
-;
 ; ===============================================================================
 ; LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT LEFT
-; RND_Renderer::StartFrame
-; [Meta XR Simulator][00066.919652][V][arvr\projects\openxr_simulator\src\sim_xrsession.cpp:260] xrWaitFrame: missed frame interval: previous interval=4813, current interval=4818, time diff = 66.456ms
-; [Meta XR Simulator][00066.930655][V][arvr\projects\openxr_simulator\src\session_capture\sim_session_capturer_gfx.cpp:95] openxr_simulator::SessionCaptureRecorderGfx::beginFrame
-; Updating actions while being in the in-game state
-; clear() wrote 00000000 to the RenderSceneContext
-; clear() wrote 00000000 to the RenderSceneContext
-; clear() wrote 00000000 to the RenderSceneContext
-; clear() wrote 00000000 to the RenderSceneContext
-; Rendering layer 33554432...
-; Rendering layer 0...
-; Rendering layer 0...
-; calcView() wrote 2899E13C to the RenderSceneContext
-; calcView() wrote 2899E13C to the RenderSceneContext
-; Rendering layer 50331648...
-; Rendering layer 33554432...
-; Rendering layer 67108864...
-; Rendering layer 50331648...
-; Rendering layer 67108864...
-
-;0x0397AA00 = nop
-;0x039A9AD0 = nop
-;0x039B11C0 = nop
+; ... repeated logs for multiple frames ...

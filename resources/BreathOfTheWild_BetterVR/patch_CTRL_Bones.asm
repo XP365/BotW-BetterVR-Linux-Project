@@ -78,35 +78,3 @@ blr
 ; hooks ksys::phys::ModelBoneAccessor::copyModelPoseToHavok at 0382094C to get the custom bone matrix instead of the original one
 0x03820C38 = lis r8, custom_gsys_ModelUnit_getBoneLocalMatrix@ha
 0x03820C3C = addi r9, r8, custom_gsys_ModelUnit_getBoneLocalMatrix@l
-
-
-; ----------------------
-; hook ModelBoneAccessor::copyHavokPoseToModel, although there's no use for it
-
-custom_gsys__Model__setBoneLocalMatrix:
-mr r8, r4
-lwz r0, 0x1C(r3)
-lha r7, 0(r8)
-mr r4, r5
-cmplw r7, r0
-li r12, 0
-bge loc_3985FE8
-lwz r0, 0x24(r3)
-slwi r12, r7, 2
-lwzx r12, r12, r0
-
-loc_3985FE8:
-mr r10, r3 ; backup gsys::Model*
-lwz r3, 0(r12)
-lwz r9, 0x74(r3)
-mr r12, r10
-lwz r10, 0x4C(r9)
-mtctr r10
-mr r5, r6
-lha r6, 2(r8)
-ba import.coreinit.hook_ModifyModelBoneMatrix
-
-0x03985FC0 = ba custom_gsys__Model__setBoneLocalMatrix
-
-;0x03985FE8 = lwz r3, 0x0(r12)
-;0x03986000 = ba import.coreinit.hook_ModifyModelBoneMatrix

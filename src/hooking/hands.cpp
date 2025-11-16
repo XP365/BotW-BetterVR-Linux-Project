@@ -287,6 +287,25 @@ void CemuHooks::hook_EnableWeaponAttackSensor(PPCInterpreter_t* hCPU) {
     }
 }
 
+void CemuHooks::hook_SetPlayerWeaponScale(PPCInterpreter_t* hCPU) {
+    hCPU->instructionPointer = hCPU->sprNew.LR;
+
+    if (GetSettings().IsThirdPersonMode()) {
+        return;
+    }
+
+    //uint32_t weaponPtr = hCPU->gpr[31];
+    //Weapon weapon = {};
+    //readMemory(weaponPtr, &weapon);
+    //WeaponType weaponType = weapon.type.getLE();
+
+    ////Log::print<INFO>("Setting weapon scale to {} for weapon {} of type {}", weapon.originalScale.getLE(), weapon.name.getLE().c_str(), std::to_underlying(weaponType));
+    //
+    ////weapon.originalScale = glm::fvec3(0.9f, 0.9f, 0.9f);
+
+    //writeMemory(weaponPtr, &weapon);
+}
+
 void CemuHooks::hook_EquipWeapon(PPCInterpreter_t* hCPU) {
     hCPU->instructionPointer = hCPU->sprNew.LR;
 
@@ -447,6 +466,7 @@ void CemuHooks::hook_ModifyBoneMatrix(PPCInterpreter_t* hCPU) {
         }
     }
 
+#ifdef _DEBUG
     static glm::fquat debug_rotatingAngles = glm::identity<glm::fquat>();
     debug_rotatingAngles = debug_rotatingAngles * glm::angleAxis(glm::radians(0.1f), glm::fvec3(0, 0, 1));
 
@@ -473,9 +493,8 @@ void CemuHooks::hook_ModifyBoneMatrix(PPCInterpreter_t* hCPU) {
             isMovingUp = true;
         }
     }
-
     //debug_movingPositions = glm::fvec3(0, 1, 0);
-
+#endif
 
     if (boneName == "Root") {
         matrix.setPos(glm::fvec3());
@@ -612,32 +631,4 @@ void CemuHooks::hook_ModifyBoneMatrix(PPCInterpreter_t* hCPU) {
     }
 
     writeMemory(matrixPtr, &matrix);
-}
-
-void CemuHooks::hook_ModifyModelBoneMatrix(PPCInterpreter_t* hCPU) {
-    // the function jump replaced a bctr instruction so use CTR instead of LR
-    hCPU->instructionPointer = hCPU->sprNew.CTR;
-
-    uint32_t modelUnitPtr = hCPU->gpr[3]; // not 100% sure, but likely
-    uint32_t gsysModelPtr = hCPU->gpr[12];
-    uint32_t matrixPtr = hCPU->gpr[4];
-    uint32_t scalePtr = hCPU->gpr[5];
-    uint32_t boneIdx = hCPU->gpr[6];
-
-    if (modelUnitPtr == 0 || gsysModelPtr == 0 || matrixPtr == 0 || scalePtr == 0) {
-        Log::print<CONTROLS>("Something's invalid");
-        return;
-    }
-
-    sead::FixedSafeString100 modelName = getMemory<sead::FixedSafeString100>(gsysModelPtr + 0x128);
-
-    //Log::print("!! Setting ModelUnit's bone #{} from model {}", boneIdx, modelName.getLE());
-
-    BEMatrix34 matrix;
-    readMemory(matrixPtr, &matrix);
-
-    //if (modelName.getLE().starts_with("Armor_067")) {
-    //    //matrix.setPos(matrix.getPos().getLE());
-    //    //writeMemory(matrixPtr, &matrix);
-    //}
 }

@@ -19,44 +19,47 @@ public:
         s_memoryBaseAddress = (uint64_t)memory_getBase();
         checkAssert(s_memoryBaseAddress != 0, "Failed to get memory base address of Cemu process!");
 
+
         osLib_registerHLEFunction("coreinit", "hook_UpdateSettings", &hook_UpdateSettings);
-        osLib_registerHLEFunction("coreinit", "hook_CreateNewScreen", &hook_CreateNewScreen);
+
+        // Actor Hooks
         osLib_registerHLEFunction("coreinit", "hook_UpdateActorList", &hook_UpdateActorList);
         osLib_registerHLEFunction("coreinit", "hook_CreateNewActor", &hook_CreateNewActor);
-        osLib_registerHLEFunction("coreinit", "hook_InjectXRInput", &hook_InjectXRInput);
-        osLib_registerHLEFunction("coreinit", "hook_ModifyHandModelAccessSearch", &hook_ModifyHandModelAccessSearch);
-        osLib_registerHLEFunction("coreinit", "hook_ChangeWeaponMtx", &hook_ChangeWeaponMtx);
 
+        // Camera Hooks
         osLib_registerHLEFunction("coreinit", "hook_BeginCameraSide", &hook_BeginCameraSide);
-        osLib_registerHLEFunction("coreinit", "hook_EndCameraSide", &hook_EndCameraSide);
-        osLib_registerHLEFunction("coreinit", "hook_CameraRotationControl", &hook_CameraRotationControl);
-        osLib_registerHLEFunction("coreinit", "hook_ReplaceCameraMode", &hook_ReplaceCameraMode);
-        osLib_registerHLEFunction("coreinit", "hook_GetRenderProjection", &hook_GetRenderProjection);
+        osLib_registerHLEFunction("coreinit", "hook_ModifyLightPrePassProjectionMatrix", &hook_ModifyLightPrePassProjectionMatrix);
+        osLib_registerHLEFunction("coreinit", "hook_UpdateCameraForGameplay", &hook_UpdateCameraForGameplay);
         osLib_registerHLEFunction("coreinit", "hook_GetRenderCamera", &hook_GetRenderCamera);
-        osLib_registerHLEFunction("coreinit", "hook_ApplyCameraRotation", &hook_ApplyCameraRotation);
-        osLib_registerHLEFunction("coreinit", "hook_OSReportToConsole", &hook_OSReportToConsole);
+        osLib_registerHLEFunction("coreinit", "hook_GetRenderProjection", &hook_GetRenderProjection);
+        osLib_registerHLEFunction("coreinit", "hook_EndCameraSide", &hook_EndCameraSide);
 
-        osLib_registerHLEFunction("coreinit", "hook_DropEquipment", &hook_DropEquipment);
-        osLib_registerHLEFunction("coreinit", "hook_EnableWeaponAttackSensor", &hook_EnableWeaponAttackSensor);
-        osLib_registerHLEFunction("coreinit", "hook_EquipWeapon", &hook_EquipWeapon);
-        osLib_registerHLEFunction("coreinit", "hook_DropWeaponLogging", &hook_DropWeaponLogging);
+        osLib_registerHLEFunction("coreinit", "hook_UseCameraDistance", &hook_UseCameraDistance);
+        osLib_registerHLEFunction("coreinit", "hook_ReplaceCameraMode", &hook_ReplaceCameraMode);
 
+        // First-Person Model Hooks
         osLib_registerHLEFunction("coreinit", "hook_SetActorOpacity", &hook_SetActorOpacity);
         osLib_registerHLEFunction("coreinit", "hook_CalculateModelOpacity", &hook_CalculateModelOpacity);
-        osLib_registerHLEFunction("coreinit", "hook_UseCameraDistance", &hook_UseCameraDistance);
-
-        osLib_registerHLEFunction("coreinit", "hook_UpdateCameraForGameplay", &hook_UpdateCameraForGameplay);
-        osLib_registerHLEFunction("coreinit", "hook_UpdateCameraRotation", &hook_UpdateCameraRotation);
-
         osLib_registerHLEFunction("coreinit", "hook_ModifyBoneMatrix", &hook_ModifyBoneMatrix);
-        osLib_registerHLEFunction("coreinit", "hook_ModifyModelBoneMatrix", &hook_ModifyModelBoneMatrix);
-        osLib_registerHLEFunction("coreinit", "hook_FixSomeCamerasForGameplayReasons", &hook_FixSomeCamerasForGameplayReasons);
-        osLib_registerHLEFunction("coreinit", "hook_ModifyLightPrePassProjectionMatrix", &hook_ModifyLightPrePassProjectionMatrix);
+        osLib_registerHLEFunction("coreinit", "hook_ChangeWeaponMtx", &hook_ChangeWeaponMtx);
 
+        // First-Person Weapon Hooks
+        osLib_registerHLEFunction("coreinit", "hook_EquipWeapon", &hook_EquipWeapon);
+        osLib_registerHLEFunction("coreinit", "hook_DropEquipment", &hook_DropEquipment);
+        osLib_registerHLEFunction("coreinit", "hook_EnableWeaponAttackSensor", &hook_EnableWeaponAttackSensor);
+        osLib_registerHLEFunction("coreinit", "hook_SetPlayerWeaponScale", &hook_SetPlayerWeaponScale);
+
+        // Input Hooks
+        osLib_registerHLEFunction("coreinit", "hook_InjectXRInput", &hook_InjectXRInput);
         osLib_registerHLEFunction("coreinit", "hook_XRRumble_VPADControlMotor", &hook_XRRumble_VPADControlMotor);
         osLib_registerHLEFunction("coreinit", "hook_XRRumble_VPADStopMotor", &hook_XRRumble_VPADStopMotor);
 
+        // Logging/Debugging Hooks
+        osLib_registerHLEFunction("coreinit", "hook_OSReportToConsole", &hook_OSReportToConsole);
+        osLib_registerHLEFunction("coreinit", "hook_DropWeaponLogging", &hook_DropWeaponLogging);
         osLib_registerHLEFunction("coreinit", "hook_GetEventName", &hook_GetEventName);
+        osLib_registerHLEFunction("coreinit", "hook_ModifyHandModelAccessSearch", &hook_ModifyHandModelAccessSearch);
+        osLib_registerHLEFunction("coreinit", "hook_CreateNewScreen", &hook_CreateNewScreen);
     };
     ~CemuHooks() {
         FreeLibrary(m_cemuHandle);
@@ -89,45 +92,44 @@ private:
 
     static void hook_UpdateSettings(PPCInterpreter_t* hCPU);
 
-    static void hook_CreateNewScreen(PPCInterpreter_t* hCPU);
+    // Actor Hooks
     static void hook_UpdateActorList(PPCInterpreter_t* hCPU);
     static void hook_CreateNewActor(PPCInterpreter_t* hCPU);
-    static void hook_InjectXRInput(PPCInterpreter_t* hCPU);
-    static void hook_ModifyHandModelAccessSearch(PPCInterpreter_t* hCPU);
-    static void hook_ChangeWeaponMtx(PPCInterpreter_t* hCPU);
 
-
-    // todo: remove this in favour of a better tell when the user is inside a menu
-    static void hook_UpdateCameraForGameplay(PPCInterpreter_t* hCPU);
-    static void hook_UpdateCameraRotation(PPCInterpreter_t* hCPU);
+    // Camera Hooks
     static void hook_BeginCameraSide(PPCInterpreter_t* hCPU);
+    static void hook_ModifyLightPrePassProjectionMatrix(PPCInterpreter_t* hCPU);
+    static void hook_UpdateCameraForGameplay(PPCInterpreter_t* hCPU);
     static void hook_GetRenderCamera(PPCInterpreter_t* hCPU);
     static void hook_GetRenderProjection(PPCInterpreter_t* hCPU);
-    static void hook_CameraRotationControl(PPCInterpreter_t* hCPU);
-    static void hook_ReplaceCameraMode(PPCInterpreter_t* hCPU);
-    static void hook_ApplyCameraRotation(PPCInterpreter_t* hCPU);
     static void hook_EndCameraSide(PPCInterpreter_t* hCPU);
+
+    static void hook_UseCameraDistance(PPCInterpreter_t* hCPU);
+    static void hook_ReplaceCameraMode(PPCInterpreter_t* hCPU);
+
+    // First-Person Model Hooks
     static void hook_SetActorOpacity(PPCInterpreter_t* hCPU);
     static void hook_CalculateModelOpacity(PPCInterpreter_t* hCPU);
-    static void hook_UseCameraDistance(PPCInterpreter_t* hCPU);
+    static void hook_ModifyBoneMatrix(PPCInterpreter_t* hCPU);
+    static void hook_ChangeWeaponMtx(PPCInterpreter_t* hCPU);
 
+    // First-Person Weapon Hooks
+    static void hook_EquipWeapon(PPCInterpreter_t* hCPU);
     static void hook_DropEquipment(PPCInterpreter_t* hCPU);
     static void hook_EnableWeaponAttackSensor(PPCInterpreter_t* hCPU);
-    static void hook_EquipWeapon(PPCInterpreter_t* hCPU);
-    static void hook_DropWeaponLogging(PPCInterpreter_t* hCPU);
+    static void hook_SetPlayerWeaponScale(PPCInterpreter_t* hCPU);
 
-    static void hook_OSReportToConsole(PPCInterpreter_t* hCPU);
-
-    static void hook_ModifyBoneMatrix(PPCInterpreter_t* hCPU);
-    static void hook_ModifyModelBoneMatrix(PPCInterpreter_t* hCPU);
-
-    static void hook_ModifyLightPrePassProjectionMatrix(PPCInterpreter_t* hCPU);
-    static void hook_FixSomeCamerasForGameplayReasons(PPCInterpreter_t* hCPU);
-
+    // Input Hooks
+    static void hook_InjectXRInput(PPCInterpreter_t* hCPU);
     static void hook_XRRumble_VPADControlMotor(PPCInterpreter_t* hCPU);
     static void hook_XRRumble_VPADStopMotor(PPCInterpreter_t* hCPU);
 
+    // Logging/Debugging Hooks
+    static void hook_OSReportToConsole(PPCInterpreter_t* hCPU);
+    static void hook_DropWeaponLogging(PPCInterpreter_t* hCPU);
     static void hook_GetEventName(PPCInterpreter_t* hCPU);
+    static void hook_ModifyHandModelAccessSearch(PPCInterpreter_t* hCPU);
+    static void hook_CreateNewScreen(PPCInterpreter_t* hCPU);
 
 public:
     template <typename T>

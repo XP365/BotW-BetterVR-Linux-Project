@@ -59,25 +59,3 @@ addi r1, r1, 0x14
 blr
 
 0x030D9F48 = bla hooked_VPADRead
-
-
-; =======================================================================================================================
-
-; only update controller inputs on the left side
-; todo: figure out why Actor::Job01 is called on the right side at all? It should be disabled by the
-0x02DE20B8 = orig_updateInputsInActorJob:
-
-hook_updateInputsInActorJob:
-lis r12, currentEyeSide@ha
-lwz r12, currentEyeSide@l(r12)
-cmpwi r12, 0
-beqlr
-lis r12, orig_updateInputsInActorJob@ha
-addi r12, r12, orig_updateInputsInActorJob@l
-mtctr r12
-;.int 0x4D820420 ; beqctr
-;blr
-;beqctr ; call original function
-bctr
-
-;0x02D5B888 = bla hook_updateInputsInActorJob

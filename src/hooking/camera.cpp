@@ -23,14 +23,6 @@ void CemuHooks::hook_BeginCameraSide(PPCInterpreter_t* hCPU) {
     }
 }
 
-// TODO FOR NEXT TIME: We change GetRenderCamera() in all cases, but this apparently even causes the camera to be based off of it despite us changing the
-// TODO FOR NEXT TIME: Should see if we could disable the double input pulling. We could do it only for the right frame.
-// TODO FOR NEXT TIME: I actually wrote down a bunch of addresses for the camera following. At least hooking these to have a camera that is rotated would solve the issue of walking without a head.
-
-// 0x02b8f508 = li r3, 0
-// 0x02B8F508 = li r3, 0
-// 0x2B9B930 = li r3, 0
-
 static std::pair<glm::quat, glm::quat> swingTwistY(const glm::quat& q) {
     glm::vec3 yAxis(0, 1, 0);
     // Project rotation axis onto Y to get twist
@@ -114,73 +106,7 @@ void CemuHooks::hook_UpdateCameraForGameplay(PPCInterpreter_t* hCPU) {
     s_framesSinceLastCameraUpdate = 0;
 }
 
-void CemuHooks::hook_UpdateCameraRotation(PPCInterpreter_t* hCPU) {
-    hCPU->instructionPointer = hCPU->sprNew.LR;
-    // Log::print("[{}] Updated camera rotation", s_currentCameraRotation.second == OpenXR::EyeSide::LEFT ? "left" : "right");
-
-    uint32_t ppc_cameraMatrixOffsetIn = hCPU->gpr[31];
-    LookAtMatrix actCam = {};
-    readMemory(ppc_cameraMatrixOffsetIn, &actCam);
-
-    //writeMemory(ppc_cameraMatrixOffsetIn, &actCam);
-}
-
 glm::mat4 CemuHooks::s_lastCameraMtx = glm::mat4(1.0f);
-
-
-// ========== Camera Rotation Control ==========
-XrTime s_lastTimestamp = -1;
-constexpr float kYawSpeed = glm::radians(60.f);
-constexpr float kDeadzone = 0.3f;
-
-inline float SecondsBetween(XrTime a, XrTime b) { return static_cast<float>(a - b) * 1e-9f; }
-inline glm::vec2 WithDeadzone(glm::vec2 v) { return (glm::length(v) < kDeadzone) ? glm::vec2(0) : v; }
-
-
-void CemuHooks::hook_CameraRotationControl(PPCInterpreter_t* hCPU) {
-    hCPU->instructionPointer = hCPU->sprNew.LR;
-
-    // set r3 to 0 so that the normal camera chase isn't ran
-    hCPU->gpr[3] = 0;
-
-    auto input = VRManager::instance().XR->m_input.load();
-    if (!input.inGame.in_game) return;
-
-    const glm::vec2 stick = WithDeadzone(ToGLM(input.inGame.camera.currentState));
-    const XrTime now = input.inGame.inputTime;
-
-    if (s_lastTimestamp == -1) {
-        s_lastTimestamp = now;
-        return;
-    }
-    const float dt = SecondsBetween(now, s_lastTimestamp);
-    s_lastTimestamp = now;
-    if (dt <= 0) return;
-
-    const glm::fquat qYaw = glm::angleAxis(-stick.x * kYawSpeed * dt, glm::vec3(0.f, 1.f, 0.f));
-
-    //VRManager::instance().XR->m_inputCameraRotation = glm::normalize(VRManager::instance().XR->m_inputCameraRotation.load() * qYaw);
-}
-
-void CemuHooks::hook_ReplaceCameraMode(PPCInterpreter_t* hCPU) {
-    hCPU->instructionPointer = hCPU->sprNew.LR;
-
-    uint32_t currentCameraMode = hCPU->gpr[3];
-    uint32_t cameraTailMode = hCPU->gpr[4]; // works best in VR since it ignores the pivot of the camera
-    uint32_t currentCameraVtbl = hCPU->gpr[5];
-
-    constexpr uint32_t kCameraChaseVtbl = 0x101B34F4;
-
-    if (hCPU->gpr[5] == kCameraChaseVtbl) {
-        //Log::print("Current camera mode: {:#X}, tail mode: {:#X}, vtbl: {:#X}", currentCameraMode, cameraTailMode, currentCameraVtbl);
-        if (GetSettings().IsFirstPersonMode()) {
-            // overwrite to tail mode
-            //hCPU->gpr[3] = cameraTailMode;
-        }
-    }
-}
-// ============================================
-
 
 void CemuHooks::hook_GetRenderCamera(PPCInterpreter_t* hCPU) {
     hCPU->instructionPointer = hCPU->sprNew.LR;
@@ -406,43 +332,6 @@ void CemuHooks::hook_ModifyLightPrePassProjectionMatrix(PPCInterpreter_t* hCPU) 
     writeMemory(projectionIn, &perspectiveProjection);
 }
 
-void CemuHooks::hook_FixSomeCamerasForGameplayReasons(PPCInterpreter_t* hCPU) {
-    hCPU->instructionPointer = hCPU->sprNew.LR;
-
-    uint32_t seadCameraPtr = hCPU->gpr[3];
-    uint32_t currentEyeSide = hCPU->gpr[4];
-    uint32_t parentCalleeLr = hCPU->gpr[5];
-    uint32_t alreadyModifiedCameraPtr = hCPU->gpr[6];
-
-    BESeadLookAtCamera camera = {};
-    readMemory(seadCameraPtr, &camera);
-
-    //Log::print("!! FixSomeCamerasForGameplayReasons: EyeSide = {}, Parent LR = {:08X}", currentEyeSide, parentCalleeLr);
-
-    if (parentCalleeLr == 0x02C65784) {
-    }
-    //hCPU->gpr[3] = alreadyModifiedCameraPtr;
-}
-
-//float previousAddedAngle = 0.0f;
-void CemuHooks::hook_ApplyCameraRotation(PPCInterpreter_t* hCPU) {
-    hCPU->instructionPointer = hCPU->sprNew.LR;
-
-    // float degrees = hCPU->fpr[1].fp0;
-    // float addedAngle = degrees - previousAddedAngle;
-    // previousAddedAngle = degrees;
-    //
-    // // rotate the camera with whatever the OpenXR rotation is
-    // XrPosef currFOV = VRManager::instance().XR->GetRenderer()->GetPose(OpenXR::EyeSide::LEFT).value();
-    // glm::fquat currQuat = ToGLM(currFOV.orientation);
-    // glm::fquat rotateHorizontalCounter = glm::angleAxis(glm::radians(addedAngle), glm::fvec3(0.0f, 1.0f, 0.0f));
-    // currQuat = rotateHorizontalCounter * currQuat;
-    //
-    // float rotatedDegrees = glm::degrees(glm::atan(currQuat.x, currQuat.w));
-    //
-    // hCPU->fpr[1].fp0 = rotatedDegrees;
-}
-
 void CemuHooks::hook_EndCameraSide(PPCInterpreter_t* hCPU) {
     hCPU->instructionPointer = hCPU->sprNew.LR;
 
@@ -466,6 +355,24 @@ void CemuHooks::hook_EndCameraSide(PPCInterpreter_t* hCPU) {
     Log::print<RENDERING>("");
 }
 
+void CemuHooks::hook_ReplaceCameraMode(PPCInterpreter_t* hCPU) {
+    hCPU->instructionPointer = hCPU->sprNew.LR;
+
+    uint32_t currentCameraMode = hCPU->gpr[3];
+    uint32_t cameraTailMode = hCPU->gpr[4]; // works best in VR since it ignores the pivot of the camera
+    uint32_t currentCameraVtbl = hCPU->gpr[5];
+
+    constexpr uint32_t kCameraChaseVtbl = 0x101B34F4;
+
+    if (hCPU->gpr[5] == kCameraChaseVtbl) {
+        //Log::print("Current camera mode: {:#X}, tail mode: {:#X}, vtbl: {:#X}", currentCameraMode, cameraTailMode, currentCameraVtbl);
+        if (GetSettings().IsFirstPersonMode()) {
+            // overwrite to tail mode
+            //hCPU->gpr[3] = cameraTailMode;
+        }
+    }
+}
+
 void CemuHooks::hook_UseCameraDistance(PPCInterpreter_t* hCPU) {
     hCPU->instructionPointer = hCPU->sprNew.LR;
 
@@ -476,8 +383,6 @@ void CemuHooks::hook_UseCameraDistance(PPCInterpreter_t* hCPU) {
         hCPU->fpr[13].fp0 = hCPU->fpr[10].fp0;
     }
 }
-
-constexpr uint32_t playerVTable = 0x101E5FFC;
 
 void CemuHooks::hook_SetActorOpacity(PPCInterpreter_t* hCPU) {
     hCPU->instructionPointer = hCPU->sprNew.LR;

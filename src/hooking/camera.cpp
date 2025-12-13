@@ -80,6 +80,10 @@ enum class PlayerMoveBitFlags : uint32_t {
 void CemuHooks::hook_UpdateCameraForGameplay(PPCInterpreter_t* hCPU) {
     hCPU->instructionPointer = hCPU->sprNew.LR;
 
+    if (CemuHooks::UseBlackBarsDuringEvents()) {
+        return;
+    }
+
     // read the camera matrix from the game's memory
     uint32_t ppc_cameraMatrixOffsetIn = hCPU->gpr[31];
     OpenXR::EyeSide ppc_cameraSide = hCPU->gpr[3] == 0 ? OpenXR::EyeSide::LEFT : OpenXR::EyeSide::RIGHT;
@@ -160,6 +164,10 @@ void CemuHooks::hook_GetRenderCamera(PPCInterpreter_t* hCPU) {
     uint32_t cameraIn = hCPU->gpr[3];
     uint32_t cameraOut = hCPU->gpr[12];
     OpenXR::EyeSide cameraSide = hCPU->gpr[11] == 0 ? OpenXR::EyeSide::LEFT : OpenXR::EyeSide::RIGHT;
+
+    if (CemuHooks::UseBlackBarsDuringEvents()) {
+        return;
+    }
 
     BESeadLookAtCamera camera = {};
     readMemory(cameraIn, &camera);

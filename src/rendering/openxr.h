@@ -38,9 +38,13 @@ public:
             XrActionStateVector2f move;
 
             XrActionStateBoolean jump;
+            XrActionStateBoolean run;
             XrActionStateBoolean cancel;
             XrActionStateBoolean interact;
             std::array<XrActionStateBoolean, 2> grab;
+
+            XrActionStateBoolean leftTrigger;
+            XrActionStateBoolean rightTrigger;
 
             struct GrabButtonState {
                 enum class Event {
@@ -85,8 +89,8 @@ public:
             XrActionStateBoolean back;
             XrActionStateBoolean sort;
             XrActionStateBoolean hold;
-            XrActionStateBoolean leftTrigger;
-            XrActionStateBoolean rightTrigger;
+            XrActionStateBoolean leftGrip;
+            XrActionStateBoolean rightGrip;
         } inMenu;
     };
     std::atomic<InputState> m_input = InputState{};
@@ -125,10 +129,14 @@ private:
     XrAction m_moveAction = XR_NULL_HANDLE;
     XrAction m_cameraAction = XR_NULL_HANDLE;
     XrAction m_grabAction = XR_NULL_HANDLE;
-
+    
     XrAction m_jumpAction = XR_NULL_HANDLE;
+    XrAction m_runAction = XR_NULL_HANDLE;
     XrAction m_cancelAction = XR_NULL_HANDLE;
     XrAction m_interactAction = XR_NULL_HANDLE;
+
+    XrAction m_inGame_leftTriggerAction = XR_NULL_HANDLE;
+    XrAction m_inGame_rightTriggerAction = XR_NULL_HANDLE;
 
     XrAction m_inGame_mapAction = XR_NULL_HANDLE;
     XrAction m_inGame_inventoryAction = XR_NULL_HANDLE;
@@ -142,8 +150,8 @@ private:
     XrAction m_backAction = XR_NULL_HANDLE; // B button
     XrAction m_sortAction = XR_NULL_HANDLE; // Y button
     XrAction m_holdAction = XR_NULL_HANDLE; // X button
-    XrAction m_leftTriggerAction = XR_NULL_HANDLE; // left bumper
-    XrAction m_rightTriggerAction = XR_NULL_HANDLE; // right bumper
+    XrAction m_leftGripAction = XR_NULL_HANDLE; // left bumper
+    XrAction m_rightGripAction = XR_NULL_HANDLE; // right bumper
 
     XrAction m_inMenu_mapAction = XR_NULL_HANDLE;
     XrAction m_inMenu_inventoryAction = XR_NULL_HANDLE;

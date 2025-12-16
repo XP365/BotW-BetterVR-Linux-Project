@@ -98,17 +98,46 @@ void CemuHooks::hook_InjectXRInput(PPCInterpreter_t* hCPU) {
     static uint32_t oldCombinedHold = 0;
     uint32_t newXRBtnHold = 0;
 
+    // we need the stick inputs for some bindings
+    XrActionStateVector2f& leftStickSource = inputs.inGame.in_game ? inputs.inGame.move : inputs.inMenu.navigate;
+
     if (inputs.inGame.in_game) {
         newXRBtnHold |= mapXRButtonToVpad(inputs.inGame.map, VPAD_BUTTON_MINUS);
         newXRBtnHold |= mapXRButtonToVpad(inputs.inGame.inventory, VPAD_BUTTON_PLUS);
 
         newXRBtnHold |= mapXRButtonToVpad(inputs.inGame.jump, VPAD_BUTTON_X);
-        newXRBtnHold |= mapXRButtonToVpad(inputs.inGame.cancel, VPAD_BUTTON_B);
-        newXRBtnHold |= mapXRButtonToVpad(inputs.inGame.interact, VPAD_BUTTON_Y);
+        newXRBtnHold |= mapXRButtonToVpad(inputs.inGame.run, VPAD_BUTTON_B);
 
-        if (inputs.inGame.grabState[0].lastEvent == GrabButtonState::Event::ShortPress || inputs.inGame.grabState[1].lastEvent == GrabButtonState::Event::ShortPress) {
-            newXRBtnHold |= VPAD_BUTTON_A;
+        newXRBtnHold |= mapXRButtonToVpad(inputs.inGame.cancel, VPAD_BUTTON_B);
+
+        newXRBtnHold |= mapXRButtonToVpad(inputs.inGame.interact, VPAD_BUTTON_A);
+
+        if (inputs.inGame.grabState[0].lastEvent == GrabButtonState::Event::ShortPress)
+            newXRBtnHold |= VPAD_BUTTON_L;
+
+        if (inputs.inGame.grabState[1].lastEvent == GrabButtonState::Event::ShortPress)
+            newXRBtnHold |= VPAD_BUTTON_R;
+
+        if (inputs.inGame.grabState[0].wasDownLastFrame)
+        {
+            if (leftStickSource.currentState.y >= 0.5f) {
+                newXRBtnHold |= VPAD_BUTTON_UP;
+            }
+            else if (leftStickSource.currentState.y <= -0.5f) {
+                newXRBtnHold |= VPAD_BUTTON_DOWN;
+            }
+
+            if (leftStickSource.currentState.x <= -0.5f) {
+                newXRBtnHold |= VPAD_BUTTON_LEFT;
+            }
+
+            else if (leftStickSource.currentState.x >= 0.5f) {
+                newXRBtnHold |= VPAD_BUTTON_RIGHT;
+            }
         }
+        
+        newXRBtnHold |= mapXRButtonToVpad(inputs.inGame.leftTrigger, VPAD_BUTTON_ZL);
+        newXRBtnHold |= mapXRButtonToVpad(inputs.inGame.rightTrigger, VPAD_BUTTON_ZR);
 
         //newXRBtnHold |= mapXRButtonToVpad(inputs.inGame.grab[0], VPAD_BUTTON_A);
         //newXRBtnHold |= mapXRButtonToVpad(inputs.inGame.grab[1], VPAD_BUTTON_A);
@@ -122,8 +151,26 @@ void CemuHooks::hook_InjectXRInput(PPCInterpreter_t* hCPU) {
         newXRBtnHold |= mapXRButtonToVpad(inputs.inMenu.sort, VPAD_BUTTON_Y);
         newXRBtnHold |= mapXRButtonToVpad(inputs.inMenu.hold, VPAD_BUTTON_X);
 
-        newXRBtnHold |= mapXRButtonToVpad(inputs.inMenu.leftTrigger, VPAD_BUTTON_L);
-        newXRBtnHold |= mapXRButtonToVpad(inputs.inMenu.rightTrigger, VPAD_BUTTON_R);
+        newXRBtnHold |= mapXRButtonToVpad(inputs.inMenu.leftGrip, VPAD_BUTTON_L);
+        newXRBtnHold |= mapXRButtonToVpad(inputs.inMenu.rightGrip, VPAD_BUTTON_R);
+
+        if (inputs.inMenu.leftGrip.currentState)
+        {
+            if (leftStickSource.currentState.y >= 0.5f) {
+                newXRBtnHold |= VPAD_BUTTON_UP;
+            }
+            else if (leftStickSource.currentState.y <= -0.5f) {
+                newXRBtnHold |= VPAD_BUTTON_DOWN;
+            }
+
+            if (leftStickSource.currentState.x <= -0.5f) {
+                newXRBtnHold |= VPAD_BUTTON_LEFT;
+            }
+
+            else if (leftStickSource.currentState.x >= 0.5f) {
+                newXRBtnHold |= VPAD_BUTTON_RIGHT;
+            }
+        }
     }
 
     // todo: see if select or grab is better
@@ -136,7 +183,7 @@ void CemuHooks::hook_InjectXRInput(PPCInterpreter_t* hCPU) {
     constexpr float HOLD_THRESHOLD = 0.1f;
 
     // movement/navigation stick
-    XrActionStateVector2f& leftStickSource = inputs.inGame.in_game ? inputs.inGame.move : inputs.inMenu.navigate;
+    leftStickSource = inputs.inGame.in_game ? inputs.inGame.move : inputs.inMenu.navigate;
 
     auto input = VRManager::instance().XR->m_input.load();
 

@@ -211,6 +211,7 @@ void OpenXR::CreateActions() {
         createAction(m_gameplayActionSet, "grab", "Grab", XR_ACTION_TYPE_BOOLEAN_INPUT, m_grabAction);
         createAction(m_gameplayActionSet, "interact", "Interact/Action (A Button)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_interactAction);
         createAction(m_gameplayActionSet, "jump", "Jump (X Button)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_jumpAction);
+        createAction(m_gameplayActionSet, "crouch", "Crouch (Left Thumbstick Button)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_crouchAction);
         createAction(m_gameplayActionSet, "run", "Run (B Button)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_runAction);
         createAction(m_gameplayActionSet, "use_rune", "Use Rune (Left Bumper)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_useRuneAction);
         createAction(m_gameplayActionSet, "throw_weapon", "Throw Weapon (Right Bumper)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_throwWeaponAction);
@@ -302,9 +303,10 @@ void OpenXR::CreateActions() {
             XrActionSuggestedBinding{ .action = m_cancelAction, .binding = GetXRPath("/user/hand/right/input/a/click") },
 
             XrActionSuggestedBinding{ .action = m_jumpAction, .binding = GetXRPath("/user/hand/right/input/b/click") },
+            XrActionSuggestedBinding{ .action = m_crouchAction, .binding = GetXRPath("/user/hand/left/input/thumbstick/click") },
             XrActionSuggestedBinding{ .action = m_runAction, .binding = GetXRPath("/user/hand/right/input/a/click") },
-            XrActionSuggestedBinding{ .action = m_useRuneAction, .binding = GetXRPath("/user/hand/left/input/x/click") },
-            XrActionSuggestedBinding{ .action = m_throwWeaponAction, .binding = GetXRPath("/user/hand/left/input/y/click") },
+            XrActionSuggestedBinding{ .action = m_useRuneAction, .binding = GetXRPath("/user/hand/left/input/y/click") },
+            //XrActionSuggestedBinding{ .action = m_throwWeaponAction, .binding = GetXRPath("/user/hand/left/input/y/click") }, //gesture
 
             XrActionSuggestedBinding{ .action = m_inGame_leftTriggerAction, .binding = GetXRPath("/user/hand/left/input/trigger/value") },
             XrActionSuggestedBinding{ .action = m_inGame_rightTriggerAction, .binding = GetXRPath("/user/hand/right/input/trigger/value") },
@@ -640,6 +642,12 @@ std::optional<OpenXR::InputState> OpenXR::UpdateActions(XrTime predictedFrameTim
         newState.inGame.jump = { XR_TYPE_ACTION_STATE_BOOLEAN };
         checkXRResult(xrGetActionStateBoolean(m_session, &getJumpInfo, &newState.inGame.jump), "Failed to get jump action value!");
     
+        XrActionStateGetInfo getCrouchInfo = { XR_TYPE_ACTION_STATE_GET_INFO };
+        getCrouchInfo.action = m_crouchAction;
+        getCrouchInfo.subactionPath = XR_NULL_PATH;
+        newState.inGame.crouch = { XR_TYPE_ACTION_STATE_BOOLEAN };
+        checkXRResult(xrGetActionStateBoolean(m_session, &getCrouchInfo, &newState.inGame.crouch), "Failed to get crouch action value!");
+
         XrActionStateGetInfo getRunInfo = { XR_TYPE_ACTION_STATE_GET_INFO };
         getRunInfo.action = m_runAction;
         getRunInfo.subactionPath = XR_NULL_PATH;

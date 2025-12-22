@@ -41,6 +41,7 @@ public:
             XrActionStateVector2f move;
 
             XrActionStateBoolean jump;
+            XrActionStateBoolean crouch;
             XrActionStateBoolean run;
             XrActionStateBoolean useRune;
             XrActionStateBoolean throwWeapon;
@@ -154,6 +155,7 @@ private:
     XrAction m_grabAction = XR_NULL_HANDLE;
     
     XrAction m_jumpAction = XR_NULL_HANDLE;
+    XrAction m_crouchAction = XR_NULL_HANDLE;
     XrAction m_runAction = XR_NULL_HANDLE;
     XrAction m_useRuneAction = XR_NULL_HANDLE;
     XrAction m_throwWeaponAction = XR_NULL_HANDLE;

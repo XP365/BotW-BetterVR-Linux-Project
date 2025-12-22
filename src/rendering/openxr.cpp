@@ -216,14 +216,13 @@ void OpenXR::CreateActions() {
         createAction(m_gameplayActionSet, "use_rune", "Use Rune (Left Bumper)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_useRuneAction);
         createAction(m_gameplayActionSet, "throw_weapon", "Throw Weapon (Right Bumper)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_throwWeaponAction);
 
-        // createAction(m_gameplayActionSet, "jump", "Attack (Y Button)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_jumpAction);
+        createAction(m_gameplayActionSet, "attack", "Attack (Y Button)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_attackAction);
         createAction(m_gameplayActionSet, "cancel", "Dash/Close (B Button)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_cancelAction);
         
         createAction(m_gameplayActionSet, "ingame_lefttrigger", "Left Trigger", XR_ACTION_TYPE_BOOLEAN_INPUT, m_inGame_leftTriggerAction);
         createAction(m_gameplayActionSet, "ingame_righttrigger", "Right Trigger", XR_ACTION_TYPE_BOOLEAN_INPUT, m_inGame_rightTriggerAction);
 
         createAction(m_gameplayActionSet, "ingame_mapandinventory", "Open/Close Map or Inventory (Select or Start Button)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_inGame_mapAndInventoryAction);
-        //createAction(m_gameplayActionSet, "ingame_inventory", "Open/Close Inventory (Start Button)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_inGame_inventoryAction);
 
         createAction(m_gameplayActionSet, "rumble", "Rumble", XR_ACTION_TYPE_VIBRATION_OUTPUT, m_rumbleAction);
     }
@@ -247,7 +246,6 @@ void OpenXR::CreateActions() {
         createAction(m_menuActionSet, "inmenu_righttrigger", "Right Trigger", XR_ACTION_TYPE_BOOLEAN_INPUT, m_inMenu_rightTriggerAction);
 
         createAction(m_menuActionSet, "inmenu_mapandinventory", "Open/Close Map (Select Button)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_inMenu_mapAndInventoryAction);
-        //createAction(m_menuActionSet, "inmenu_inventory", "Open/Close Inventory (Start Button)", XR_ACTION_TYPE_BOOLEAN_INPUT, m_inMenu_inventoryAction);
     }
 
     {
@@ -258,18 +256,12 @@ void OpenXR::CreateActions() {
             XrActionSuggestedBinding{ .action = m_aimPoseAction, .binding = GetXRPath("/user/hand/left/input/aim/pose") },
             XrActionSuggestedBinding{ .action = m_aimPoseAction, .binding = GetXRPath("/user/hand/right/input/aim/pose") },
             XrActionSuggestedBinding{ .action = m_inGame_mapAndInventoryAction, .binding = GetXRPath("/user/hand/right/input/menu/click") },
-            //XrActionSuggestedBinding{ .action = m_inGame_inventoryAction, .binding = GetXRPath("/user/hand/right/input/menu/click") },
 
             XrActionSuggestedBinding{ .action = m_grabAction, .binding = GetXRPath("/user/hand/left/input/select/click") },
             XrActionSuggestedBinding{ .action = m_grabAction, .binding = GetXRPath("/user/hand/right/input/select/click") },
 
-            // XrActionSuggestedBinding{ .action = m_interactAction, .binding = GetXRPath("/user/hand/right/input/menu/click") },
-            // XrActionSuggestedBinding{ .action = m_interactAction, .binding = GetXRPath("/user/hand/left/input/menu/click") },
-            // XrActionSuggestedBinding{ .action = m_grabAction, .binding = GetXRPath("/user/hand/right/input/select/click") },
-
             // === menu suggestions ===
             XrActionSuggestedBinding{ .action = m_inMenu_mapAndInventoryAction, .binding = GetXRPath("/user/hand/right/input/menu/click") },
-            //XrActionSuggestedBinding{ .action = m_inMenu_inventoryAction, .binding = GetXRPath("/user/hand/right/input/menu/click") },
             XrActionSuggestedBinding{ .action = m_selectAction, .binding = GetXRPath("/user/hand/right/input/select/click") },
             XrActionSuggestedBinding{ .action = m_backAction, .binding = GetXRPath("/user/hand/right/input/menu/click") },
             XrActionSuggestedBinding{ .action = m_sortAction, .binding = GetXRPath("/user/hand/left/input/select/click") },
@@ -290,23 +282,20 @@ void OpenXR::CreateActions() {
             XrActionSuggestedBinding{ .action = m_aimPoseAction, .binding = GetXRPath("/user/hand/left/input/aim/pose") },
             XrActionSuggestedBinding{ .action = m_aimPoseAction, .binding = GetXRPath("/user/hand/right/input/aim/pose") },
             XrActionSuggestedBinding{ .action = m_inGame_mapAndInventoryAction, .binding = GetXRPath("/user/hand/right/input/thumbstick/click") },
-            //XrActionSuggestedBinding{ .action = m_inGame_inventoryAction, .binding = GetXRPath("/user/hand/right/input/thumbstick/click") },
-
+            
             XrActionSuggestedBinding{ .action = m_moveAction, .binding = GetXRPath("/user/hand/left/input/thumbstick") },
             XrActionSuggestedBinding{ .action = m_cameraAction, .binding = GetXRPath("/user/hand/right/input/thumbstick") },
 
             XrActionSuggestedBinding{ .action = m_grabAction, .binding = GetXRPath("/user/hand/left/input/squeeze/value") },
             XrActionSuggestedBinding{ .action = m_grabAction, .binding = GetXRPath("/user/hand/right/input/squeeze/value") },
- /*         XrActionSuggestedBinding{ .action = m_interactAction, .binding = GetXRPath("/user/hand/left/input/trigger/value") },
-            XrActionSuggestedBinding{ .action = m_interactAction, .binding = GetXRPath("/user/hand/right/input/trigger/value") },*/
             XrActionSuggestedBinding{ .action = m_interactAction, .binding = GetXRPath("/user/hand/right/input/a/click") },
             XrActionSuggestedBinding{ .action = m_cancelAction, .binding = GetXRPath("/user/hand/right/input/a/click") },
 
             XrActionSuggestedBinding{ .action = m_jumpAction, .binding = GetXRPath("/user/hand/right/input/b/click") },
             XrActionSuggestedBinding{ .action = m_crouchAction, .binding = GetXRPath("/user/hand/left/input/thumbstick/click") },
             XrActionSuggestedBinding{ .action = m_runAction, .binding = GetXRPath("/user/hand/right/input/a/click") },
+            XrActionSuggestedBinding{ .action = m_attackAction, .binding = GetXRPath("/user/hand/left/input/x/click") },
             XrActionSuggestedBinding{ .action = m_useRuneAction, .binding = GetXRPath("/user/hand/left/input/y/click") },
-            //XrActionSuggestedBinding{ .action = m_throwWeaponAction, .binding = GetXRPath("/user/hand/left/input/y/click") }, //gesture
 
             XrActionSuggestedBinding{ .action = m_inGame_leftTriggerAction, .binding = GetXRPath("/user/hand/left/input/trigger/value") },
             XrActionSuggestedBinding{ .action = m_inGame_rightTriggerAction, .binding = GetXRPath("/user/hand/right/input/trigger/value") },
@@ -318,7 +307,6 @@ void OpenXR::CreateActions() {
             XrActionSuggestedBinding{ .action = m_scrollAction, .binding = GetXRPath("/user/hand/right/input/thumbstick") },
             XrActionSuggestedBinding{ .action = m_navigateAction, .binding = GetXRPath("/user/hand/left/input/thumbstick") },
             XrActionSuggestedBinding{ .action = m_inMenu_mapAndInventoryAction, .binding = GetXRPath("/user/hand/right/input/thumbstick/click") },
-            //XrActionSuggestedBinding{ .action = m_inMenu_inventoryAction, .binding = GetXRPath("/user/hand/right/input/thumbstick/click") },
             XrActionSuggestedBinding{ .action = m_selectAction, .binding = GetXRPath("/user/hand/right/input/a/click") },
             XrActionSuggestedBinding{ .action = m_backAction, .binding = GetXRPath("/user/hand/right/input/b/click") },
             XrActionSuggestedBinding{ .action = m_sortAction, .binding = GetXRPath("/user/hand/left/input/y/click") },
@@ -366,7 +354,6 @@ void OpenXR::CreateActions() {
             XrActionSuggestedBinding{ .action = m_scrollAction, .binding = GetXRPath("/user/hand/left/input/thumbstick") },
             XrActionSuggestedBinding{ .action = m_navigateAction, .binding = GetXRPath("/user/hand/right/input/thumbstick") },
             XrActionSuggestedBinding{ .action = m_inMenu_mapAndInventoryAction, .binding = GetXRPath("/user/hand/right/input/menu/click") },
-            //XrActionSuggestedBinding{ .action = m_inMenu_inventoryAction, .binding = GetXRPath("/user/hand/right/input/menu/click") },
             XrActionSuggestedBinding{ .action = m_selectAction, .binding = GetXRPath("/user/hand/right/input/trigger/value") },
             XrActionSuggestedBinding{ .action = m_backAction, .binding = GetXRPath("/user/hand/right/input/trackpad/click") },
             XrActionSuggestedBinding{ .action = m_sortAction, .binding = GetXRPath("/user/hand/left/input/trigger/value") },
@@ -526,11 +513,6 @@ std::optional<OpenXR::InputState> OpenXR::UpdateActions(XrTime predictedFrameTim
         newState.inMenu.mapAndInventory = { XR_TYPE_ACTION_STATE_BOOLEAN };
         checkXRResult(xrGetActionStateBoolean(m_session, &getMapAndInventoryInfo, &newState.inMenu.mapAndInventory), "Failed to get back action value!");
 
-        //XrActionStateGetInfo getInventory = { XR_TYPE_ACTION_STATE_GET_INFO };
-        //getInventory.action = m_inMenu_inventoryAction;
-        //newState.inMenu.inventory = { XR_TYPE_ACTION_STATE_BOOLEAN };
-        //checkXRResult(xrGetActionStateBoolean(m_session, &getInventory, &newState.inMenu.inventory), "Failed to get back action value!");
-    
         XrActionStateGetInfo getLeftTriggerInfo = { XR_TYPE_ACTION_STATE_GET_INFO };
         getLeftTriggerInfo.action = m_inMenu_leftTriggerAction;
         getLeftTriggerInfo.subactionPath = XR_NULL_PATH;
@@ -654,6 +636,12 @@ std::optional<OpenXR::InputState> OpenXR::UpdateActions(XrTime predictedFrameTim
         newState.inGame.run = { XR_TYPE_ACTION_STATE_BOOLEAN };
         checkXRResult(xrGetActionStateBoolean(m_session, &getRunInfo, &newState.inGame.run), "Failed to get run action value!");
         
+        XrActionStateGetInfo getAttackInfo = { XR_TYPE_ACTION_STATE_GET_INFO };
+        getAttackInfo.action = m_attackAction;
+        getAttackInfo.subactionPath = XR_NULL_PATH;
+        newState.inGame.attack = { XR_TYPE_ACTION_STATE_BOOLEAN };
+        checkXRResult(xrGetActionStateBoolean(m_session, &getAttackInfo, &newState.inGame.attack), "Failed to get attack action value!");
+    
         XrActionStateGetInfo getUseRuneInfo = { XR_TYPE_ACTION_STATE_GET_INFO };
         getUseRuneInfo.action = m_useRuneAction;
         getUseRuneInfo.subactionPath = XR_NULL_PATH;

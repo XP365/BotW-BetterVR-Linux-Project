@@ -31,7 +31,6 @@ public:
 
             // shared
             XrActionStateBoolean mapAndInventory;
-            //XrActionStateBoolean inventory;
 
             XrActionStateBoolean leftTrigger;
             XrActionStateBoolean rightTrigger;
@@ -43,6 +42,7 @@ public:
             XrActionStateBoolean jump;
             XrActionStateBoolean crouch;
             XrActionStateBoolean run;
+            XrActionStateBoolean attack;
             XrActionStateBoolean useRune;
             XrActionStateBoolean throwWeapon;
             XrActionStateBoolean cancel;
@@ -87,7 +87,6 @@ public:
 
             // shared
             XrActionStateBoolean mapAndInventory;
-            //XrActionStateBoolean inventory;
 
             XrActionStateBoolean leftTrigger;
             XrActionStateBoolean rightTrigger;
@@ -157,6 +156,7 @@ private:
     XrAction m_jumpAction = XR_NULL_HANDLE;
     XrAction m_crouchAction = XR_NULL_HANDLE;
     XrAction m_runAction = XR_NULL_HANDLE;
+    XrAction m_attackAction = XR_NULL_HANDLE;
     XrAction m_useRuneAction = XR_NULL_HANDLE;
     XrAction m_throwWeaponAction = XR_NULL_HANDLE;
 
@@ -167,7 +167,6 @@ private:
     XrAction m_inGame_rightTriggerAction = XR_NULL_HANDLE;
 
     XrAction m_inGame_mapAndInventoryAction = XR_NULL_HANDLE;
-    /*XrAction m_inGame_inventoryAction = XR_NULL_HANDLE;*/
     XrAction m_rumbleAction = XR_NULL_HANDLE;
 
     // menu actions
@@ -185,7 +184,6 @@ private:
     XrAction m_inMenu_rightTriggerAction = XR_NULL_HANDLE;
 
     XrAction m_inMenu_mapAndInventoryAction = XR_NULL_HANDLE;
-    /*XrAction m_inMenu_inventoryAction = XR_NULL_HANDLE;*/
 
     std::unique_ptr<RND_Renderer> m_renderer;
     std::unique_ptr<RumbleManager> m_rumbleManager;

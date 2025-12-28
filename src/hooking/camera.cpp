@@ -168,6 +168,7 @@ void CemuHooks::hook_GetRenderCamera(PPCInterpreter_t* hCPU) {
     basePos = s_wsCameraPosition;
     baseRot = s_wsCameraRotation;
     auto [swing, baseYaw] = swingTwistY(baseRot);
+    glm::fquat baseYawWithoutClimbingFix = baseYaw;
 
     if (IsFirstPerson()) {
         // take link's direction, then rotate the headset position
@@ -177,21 +178,22 @@ void CemuHooks::hook_GetRenderCamera(PPCInterpreter_t* hCPU) {
 
         playerPos.y += s_isSwimming ? hardcodedSwimOffset : 0.0f;
 
-        if (s_isLadderClimbing) {
-            baseYaw *= glm::angleAxis(glm::radians(180.0f), glm::fvec3(0.0f, 1.0f, 0.0f));
-        }
-
         basePos = playerPos;
         if (auto settings = GetFirstPersonSettingsForActiveEvent()) {
             if (settings->ignoreCameraRotation) {
                 glm::fquat playerRot = mtx.getRotLE();
                 auto [swing, yaw] = swingTwistY(playerRot);
                 baseYaw = yaw * glm::angleAxis(glm::radians(180.0f), glm::fvec3(0.0f, 1.0f, 0.0f));
+                baseYawWithoutClimbingFix = yaw * glm::angleAxis(glm::radians(180.0f), glm::fvec3(0.0f, 1.0f, 0.0f));
             }
+        }
+        
+        if (s_isLadderClimbing) {
+            baseYaw *= glm::angleAxis(glm::radians(180.0f), glm::fvec3(0.0f, 1.0f, 0.0f));
         }
     }
 
-    s_lastCameraMtx = glm::fmat4x3(glm::translate(glm::identity<glm::fmat4>(), basePos) * glm::mat4(baseRot));
+    s_lastCameraMtx = glm::fmat4x3(glm::translate(glm::identity<glm::fmat4>(), basePos) * glm::mat4(baseYawWithoutClimbingFix));
 
     // vr camera
     std::optional<XrPosef> currPoseOpt = VRManager::instance().XR->GetRenderer()->GetPose(side);

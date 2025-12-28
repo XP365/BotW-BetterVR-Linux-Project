@@ -133,30 +133,30 @@ $guiFollowMode:int = 0
 
 
 # First Person - Height Offset
-[Preset]
-name = Small
-category = Height In First Person
-condition = $cameraMode == 1
-$cameraHeight = -1.0
-
-[Preset]
-name = Normal (Default)
-category = Height In First Person
-condition = $cameraMode == 1
-default = 1
-$cameraHeight = -0.5
-
-[Preset]
-name = Tall (VFX Might Be Offset)
-category = Height In First Person
-condition = $cameraMode == 1
-$cameraHeight = 0.0
-
-[Preset]
-name = Really Tall (VFX Might Be Offset)
-category = Height In First Person
-condition = $cameraMode == 1
-$cameraHeight = 10.0
+# [Preset]
+# name = Small
+# category = Height In First Person
+# condition = $cameraMode == 1
+# $cameraHeight = -1.0
+# 
+# [Preset]
+# name = Normal (Default)
+# category = Height In First Person
+# condition = $cameraMode == 1
+# default = 1
+# $cameraHeight = -0.5
+# 
+# [Preset]
+# name = Tall (VFX Might Be Offset)
+# category = Height In First Person
+# condition = $cameraMode == 1
+# $cameraHeight = 0.0
+# 
+# [Preset]
+# name = Really Tall (VFX Might Be Offset)
+# category = Height In First Person
+# condition = $cameraMode == 1
+# $cameraHeight = 10.0
 
 
 # Third Person - Camera Distance

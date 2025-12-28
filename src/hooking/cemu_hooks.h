@@ -38,6 +38,7 @@ public:
         osLib_registerHLEFunction("coreinit", "hook_ReplaceCameraMode", &hook_ReplaceCameraMode);
         osLib_registerHLEFunction("coreinit", "hook_GetEventName", &hook_GetEventName);
         osLib_registerHLEFunction("coreinit", "hook_OverwriteCameraParam", &hook_OverwriteCameraParam);
+        osLib_registerHLEFunction("coreinit", "hook_PlayerLadderFix", &hook_PlayerLadderFix);
 
         // First-Person Model Hooks
         osLib_registerHLEFunction("coreinit", "hook_SetActorOpacity", &hook_SetActorOpacity);
@@ -201,6 +202,7 @@ private:
     static void hook_ReplaceCameraMode(PPCInterpreter_t* hCPU);
     static void hook_GetEventName(PPCInterpreter_t* hCPU);
     static void hook_OverwriteCameraParam(PPCInterpreter_t* hCPU);
+    static void hook_PlayerLadderFix(PPCInterpreter_t* hCPU);
 
     // First-Person Model Hooks
     static void hook_SetActorOpacity(PPCInterpreter_t* hCPU);

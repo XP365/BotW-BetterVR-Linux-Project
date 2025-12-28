@@ -35,6 +35,7 @@ constexpr float hardcodedSwimOffset = 1.73f/* model height*/ - 0.3f /*head heigh
 glm::fvec3 s_wsCameraPosition = glm::fvec3();
 glm::fquat s_wsCameraRotation = glm::identity<glm::fquat>();
 bool s_isSwimming = false;
+uint32_t s_isLadderClimbing = 0;
 
 void CemuHooks::hook_UpdateCameraForGameplay(PPCInterpreter_t* hCPU) {
     hCPU->instructionPointer = hCPU->sprNew.LR;
@@ -80,6 +81,8 @@ void CemuHooks::hook_UpdateCameraForGameplay(PPCInterpreter_t* hCPU) {
         PlayerMoveBitFlags moveBits = actor.moveBitFlags.getLE();
         s_isSwimming = (std::to_underlying(moveBits) & std::to_underlying(PlayerMoveBitFlags::SWIMMING_1024)) != 0;
 
+        //Log::print<INFO>("{:08X}", std::to_underlying(moveBits));
+
         // read player MTX
         BEMatrix34& mtx = actor.mtx;
         glm::fvec3 playerPos = actor.mtx.getPos().getLE();
@@ -92,6 +95,14 @@ void CemuHooks::hook_UpdateCameraForGameplay(PPCInterpreter_t* hCPU) {
                 auto [swing, baseYaw] = swingTwistY(playerRot);
                 s_wsCameraRotation = baseYaw * glm::angleAxis(glm::radians(180.0f), glm::fvec3(0.0f, 1.0f, 0.0f));
             }
+        }
+
+        if (s_isLadderClimbing > 0) {
+            s_isLadderClimbing--;
+        }
+
+        if (s_isLadderClimbing) {
+            s_wsCameraRotation *= glm::angleAxis(glm::radians(180.0f), glm::fvec3(0, 1, 0));
         }
 
         glm::mat4 playerMtx4 = glm::inverse(glm::translate(glm::identity<glm::mat4>(), playerPos) * glm::mat4(s_wsCameraRotation));
@@ -165,6 +176,10 @@ void CemuHooks::hook_GetRenderCamera(PPCInterpreter_t* hCPU) {
         glm::fvec3 playerPos = mtx.getPos().getLE();
 
         playerPos.y += s_isSwimming ? hardcodedSwimOffset : 0.0f;
+
+        if (s_isLadderClimbing) {
+            baseYaw *= glm::angleAxis(glm::radians(180.0f), glm::fvec3(0.0f, 1.0f, 0.0f));
+        }
 
         basePos = playerPos;
         if (auto settings = GetFirstPersonSettingsForActiveEvent()) {
@@ -410,16 +425,19 @@ void CemuHooks::hook_ReplaceCameraMode(PPCInterpreter_t* hCPU) {
     uint32_t currentCameraVtbl = hCPU->gpr[5];
 
     constexpr uint32_t kCameraChaseVtbl = 0x101B34F4;
+    uint32_t kCameraTailVtbl = 0x101BC278;
 
-    if (hCPU->gpr[5] == kCameraChaseVtbl) {
+    if (hCPU->gpr[5] == kCameraTailVtbl) {
         //Log::print<RENDERING>("Current camera mode: {:#X}, tail mode: {:#X}, vtbl: {:#X}", currentCameraMode, cameraTailMode, currentCameraVtbl);
         if (IsFirstPerson()) {
             // overwrite to tail mode
             //hCPU->gpr[3] = cameraTailMode;
+
+            //hCPU->gpr[3] = cameraTailMode;
         }
     }
 
-    Log::print<RENDERING>("Camera mode: {:#X}, tail mode: {:#X}, vtbl: {:#X}", currentCameraMode, cameraTailMode, currentCameraVtbl);
+    //Log::print<INFO>("Camera mode: {:#X}, tail mode: {:#X}, vtbl: {:#X}", currentCameraMode, cameraTailMode, currentCameraVtbl);
 }
 
 void CemuHooks::hook_UseCameraDistance(PPCInterpreter_t* hCPU) {
@@ -614,4 +632,13 @@ void CemuHooks::hook_OverwriteCameraParam(PPCInterpreter_t* hCPU) {
     }
 
     hCPU->instructionPointer = orig_GetStaticParam_float_funcAddr;
+}
+
+void CemuHooks::hook_PlayerLadderFix(PPCInterpreter_t* hCPU) {
+    hCPU->gpr[0] = hCPU->sprNew.LR;
+    hCPU->instructionPointer = 0x02D07CEC;
+
+    if (IsFirstPerson()) {
+        s_isLadderClimbing = 2;
+    }
 }

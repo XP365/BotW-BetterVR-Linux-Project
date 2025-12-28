@@ -257,13 +257,13 @@ static_assert(sizeof(PlayerOrEnemy) == 0x838, "PlayerOrEnemy size mismatch");
 // 0x00000410 for swimming (00001000001000000000000000000000)
 enum class PlayerMoveBitFlags : uint32_t {
     IS_MOVING = 1 << 0,
-    UNK_02 = 1 << 1,
+    IN_AIR_MAYBE_02 = 1 << 1,
     UNK_004 = 1 << 2,
     UNK_008 = 1 << 3,
-    UNK_016 = 1 << 4,
+    IS_LADDER_016 = 1 << 4,
     UNK_032 = 1 << 5,
     UNK_064 = 1 << 6,
-    UNK_128 = 1 << 7,
+    IS_WALL_CLIMBING_MAYBE_128 = 1 << 7, // set while climbing?
     UNK_256 = 1 << 8,
     UNK_512 = 1 << 9,
     SWIMMING_1024 = 1 << 10,

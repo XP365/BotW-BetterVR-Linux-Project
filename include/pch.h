@@ -138,7 +138,9 @@ template<template<class...> class U, class... Vs>
 inline constexpr bool is_instance_of_v<U<Vs...>,U> = std::true_type{};
 
 template <typename T1, typename T2>
-constexpr bool HAS_FLAG(T1 flags, T2 test_flag) { return (flags & (T1)test_flag) == (T1)test_flag; }
+constexpr bool HAS_FLAG(T1 flags, T2 test_flag) {
+    return ((uint64_t)(flags) & (uint64_t)test_flag) == (uint64_t)(test_flag);
+}
 
 template <typename T>
 inline T swapEndianness(T val) {

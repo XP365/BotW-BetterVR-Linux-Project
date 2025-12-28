@@ -74,11 +74,13 @@ blr
 ;; store CameraKeep (no right-stick controls at all! Might not follow player?)
 ;;0x02BD55AC = bla storeCameraModePtr
 ;; store CameraTail (seems to fix pivot anchor issues and forward looking camera?!)
-0x02BEB244 = bla storeCameraModePtr
+;0x02BEB244 = bla storeCameraModePtr
 ;; store CameraRevolve
 ;;0x02BE443C = bla storeCameraModePtr
 ;; store CameraAbyss (prevents all rotational camera, but follows player)
 ;;0x02B8E858 = bla storeCameraModePtr
+; store CameraChase (normal third-person camera)
+0x02B966A4 = bla storeCameraModePtr
 
 useCameraFinder:
 mflr r0
@@ -127,3 +129,6 @@ blr
 0x02B9D2E4 = bla import.coreinit.hook_OverwriteCameraParam
 0x02B9D304 = bla import.coreinit.hook_OverwriteCameraParam
 0x02B9D324 = bla import.coreinit.hook_OverwriteCameraParam
+
+
+0x02D07CE8 = ba import.coreinit.hook_PlayerLadderFix

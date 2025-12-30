@@ -71,6 +71,8 @@ using Microsoft::WRL::ComPtr;
 #include <glm/gtx/euler_angles.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
 
+#define ENABLE_VK_ROBUSTNESS 0
+
 inline glm::fvec2 ToGLM(const XrVector2f& vec) {
     return glm::make_vec2(&vec.x);
 }

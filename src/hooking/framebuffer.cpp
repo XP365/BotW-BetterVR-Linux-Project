@@ -316,8 +316,9 @@ inline bool IsTimeline(const VkSemaphore semaphore) {
 }
 
 VkResult VkDeviceOverrides::QueueSubmit(const vkroots::VkDeviceDispatch* pDispatch, VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence) {
+    VkResult result = VK_SUCCESS;
     if (s_activeCopyOperations.empty()) {
-        return pDispatch->QueueSubmit(queue, submitCount, pSubmits, fence);
+        result = pDispatch->QueueSubmit(queue, submitCount, pSubmits, fence);
     }
     else {
         Log::print<INTEROP>("QueueSubmit called with {} active copy operations", s_activeCopyOperations.size());
@@ -426,8 +427,42 @@ VkResult VkDeviceOverrides::QueueSubmit(const vkroots::VkDeviceDispatch* pDispat
             const_cast<VkSubmitInfo&>(submitInfo).signalSemaphoreCount = (uint32_t)modifiedSubmitInfo.signalSemaphores.size();
             const_cast<VkSubmitInfo&>(submitInfo).pSignalSemaphores = modifiedSubmitInfo.signalSemaphores.data();
         }
-        return pDispatch->QueueSubmit(queue, submitCount, pSubmits, fence);
+        result = pDispatch->QueueSubmit(queue, submitCount, pSubmits, fence);
     }
+
+#if ENABLE_VK_ROBUSTNESS
+    if (result == VK_ERROR_DEVICE_LOST) {
+        auto vkGetDeviceFaultInfoEXT = (PFN_vkGetDeviceFaultInfoEXT)pDispatch->GetDeviceProcAddr(pDispatch->Device, "vkGetDeviceFaultInfoEXT");
+        if (vkGetDeviceFaultInfoEXT) {
+            VkDeviceFaultCountsEXT faultCounts = { VK_STRUCTURE_TYPE_DEVICE_FAULT_COUNTS_EXT };
+            VkDeviceFaultInfoEXT faultInfo = { VK_STRUCTURE_TYPE_DEVICE_FAULT_INFO_EXT };
+
+            if (vkGetDeviceFaultInfoEXT(pDispatch->Device, &faultCounts, nullptr) == VK_SUCCESS) {
+                Log::print<ERROR>("Device lost! Fault counts: Address info: {}, Vendor info: {}, Vendor binary: {}",
+                    faultCounts.addressInfoCount, faultCounts.vendorInfoCount, faultCounts.vendorBinarySize);
+
+                std::vector<VkDeviceFaultAddressInfoEXT> addressInfos(faultCounts.addressInfoCount);
+                std::vector<VkDeviceFaultVendorInfoEXT> vendorInfos(faultCounts.vendorInfoCount);
+                std::vector<uint8_t> vendorBinary(faultCounts.vendorBinarySize);
+
+                faultInfo.pAddressInfos = addressInfos.data();
+                faultInfo.pVendorInfos = vendorInfos.data();
+                faultInfo.pVendorBinaryData = vendorBinary.data();
+
+                if (vkGetDeviceFaultInfoEXT(pDispatch->Device, &faultCounts, &faultInfo) == VK_SUCCESS) {
+                    for (const auto& addrInfo : addressInfos) {
+                        Log::print<ERROR>("Fault Address: 0x{:X}, Precision: {}, Type: {}", addrInfo.reportedAddress, addrInfo.addressPrecision, (int)addrInfo.addressType);
+                    }
+                    for (const auto& vendorInfo : vendorInfos) {
+                        Log::print<ERROR>("Fault Vendor Info: Description: {}, Code: {}", vendorInfo.description, vendorInfo.vendorFaultCode);
+                    }
+                }
+            }
+        }
+    }
+#endif
+
+    return result;
 }
 
 VkResult VkDeviceOverrides::QueuePresentKHR(const vkroots::VkDeviceDispatch* pDispatch, VkQueue queue, const VkPresentInfoKHR* pPresentInfo) {

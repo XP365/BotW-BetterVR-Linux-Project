@@ -75,7 +75,7 @@ While more integrated solutions are being found out, there's probably ways to se
 3. Open Cemu normally through the `Cemu.exe` (not the .bat file!).
     - Cemu's window title should state Cemu 2.6 or newer. Any older version isn't supported.
     - The game should say V208 inside the update column in Cemu's game list. Otherwise it's outdated/not updated, and won't work.
-    - Go to `Options`->`General Settings`, and then under the `Graphics` tab make sure that you're using Vulkan and that the right GPU is selected.
+    - Go to `Options`->`General Settings`, and then under the `Graphics` tab make sure that you're using Vulkan, that the right GPU is selected and that VSync is turned off.
     
     If all that is true, continue to the next step by closing the settings window and then Cemu entirely. Otherwise, fix those issues before continuing.
 

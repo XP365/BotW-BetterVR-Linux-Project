@@ -119,6 +119,11 @@ const std::vector<std::string> additionalDeviceExtensions = {
     VK_KHR_EXTERNAL_SEMAPHORE_EXTENSION_NAME,
     VK_KHR_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME,
     VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
+#if ENABLE_VK_ROBUSTNESS
+    VK_EXT_DEVICE_FAULT_EXTENSION_NAME,
+    VK_EXT_ROBUSTNESS_2_EXTENSION_NAME,
+    VK_EXT_IMAGE_ROBUSTNESS_EXTENSION_NAME
+#endif
 };
 
 VkResult VRLayer::VkInstanceOverrides::CreateDevice(const vkroots::VkInstanceDispatch* pDispatch, VkPhysicalDevice gpu, const VkDeviceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDevice* pDevice) {
@@ -135,21 +140,57 @@ VkResult VRLayer::VkInstanceOverrides::CreateDevice(const vkroots::VkInstanceDis
 
     // Test if timeline semaphores are already enabled
     bool timelineSemaphoresEnabled = false;
+    bool imageRobustnessEnabled = false;
+    bool robustness2Enabled = false;
     const void* current_pNext = pCreateInfo->pNext;
     while (current_pNext) {
         const VkBaseInStructure* base = static_cast<const VkBaseInStructure*>(current_pNext);
         if (base->sType == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES) {
             timelineSemaphoresEnabled = true;
         }
+#if ENABLE_VK_ROBUSTNESS
+        if (base->sType == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES) {
+            imageRobustnessEnabled = true;
+        }
+        if (base->sType == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT) {
+            robustness2Enabled = true;
+        }
+#endif
         current_pNext = base->pNext;
     }
 
     VkPhysicalDeviceTimelineSemaphoreFeatures createSemaphoreFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES };
     createSemaphoreFeatures.timelineSemaphore = true;
-    createSemaphoreFeatures.pNext = const_cast<void*>(pCreateInfo->pNext);
+
+    VkPhysicalDeviceImageRobustnessFeatures createImageRobustnessFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES };
+    createImageRobustnessFeatures.robustImageAccess = true;
+
+    VkPhysicalDeviceRobustness2FeaturesEXT createRobustness2Features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT };
+    createRobustness2Features.robustBufferAccess2 = true;
+    createRobustness2Features.robustImageAccess2 = true;
+    createRobustness2Features.nullDescriptor = true;
+
+    void* nextChain = const_cast<void*>(pCreateInfo->pNext);
+
+#if ENABLE_VK_ROBUSTNESS
+    if (!robustness2Enabled) {
+        createRobustness2Features.pNext = nextChain;
+        nextChain = &createRobustness2Features;
+    }
+
+    if (!imageRobustnessEnabled) {
+        createImageRobustnessFeatures.pNext = nextChain;
+        nextChain = &createImageRobustnessFeatures;
+    }
+#endif
+
+    if (!timelineSemaphoresEnabled) {
+        createSemaphoreFeatures.pNext = nextChain;
+        nextChain = &createSemaphoreFeatures;
+    }
 
     VkDeviceCreateInfo modifiedCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-    modifiedCreateInfo.pNext = timelineSemaphoresEnabled ? pCreateInfo->pNext : &createSemaphoreFeatures;
+    modifiedCreateInfo.pNext = nextChain;
     modifiedCreateInfo.flags = pCreateInfo->flags;
     modifiedCreateInfo.queueCreateInfoCount = pCreateInfo->queueCreateInfoCount;
     modifiedCreateInfo.pQueueCreateInfos = pCreateInfo->pQueueCreateInfos;

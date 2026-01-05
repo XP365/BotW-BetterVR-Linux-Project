@@ -361,21 +361,21 @@ VkResult VRLayer::VkInstanceOverrides::CreateInstance(PFN_vkCreateInstance creat
     return result;
 }
 
-void VRLayer::VkInstanceOverrides::DestroyInstance(const vkroots::VkInstanceDispatch* pDispatch, VkInstance instance, const VkAllocationCallbacks* pAllocator) {
+void VRLayer::VkInstanceOverrides::DestroyInstance(const vkroots::VkInstanceDispatch& pDispatch, VkInstance instance, const VkAllocationCallbacks* pAllocator) {
     if (g_debugMessenger != VK_NULL_HANDLE && g_destroyDebugUtilsMessenger) {
         g_destroyDebugUtilsMessenger(instance, g_debugMessenger, pAllocator);
         g_debugMessenger = VK_NULL_HANDLE;
     }
-    return pDispatch->DestroyInstance(instance, pAllocator);
+    return pDispatch.DestroyInstance(instance, pAllocator);
 }
 
 
-VkResult VRLayer::VkInstanceOverrides::EnumeratePhysicalDevices(const vkroots::VkInstanceDispatch* pDispatch, VkInstance instance, uint32_t* pPhysicalDeviceCount, VkPhysicalDevice* pPhysicalDevices) {
+VkResult VRLayer::VkInstanceOverrides::EnumeratePhysicalDevices(const vkroots::VkInstanceDispatch& pDispatch, VkInstance instance, uint32_t* pPhysicalDeviceCount, VkPhysicalDevice* pPhysicalDevices) {
     // Proceed to get all devices
     uint32_t internalCount = 0;
-    checkVkResult(pDispatch->EnumeratePhysicalDevices(instance, &internalCount, nullptr), "Failed to retrieve number of vulkan physical devices!");
+    checkVkResult(pDispatch.EnumeratePhysicalDevices(instance, &internalCount, nullptr), "Failed to retrieve number of vulkan physical devices!");
     std::vector<VkPhysicalDevice> internalDevices(internalCount);
-    checkVkResult(pDispatch->EnumeratePhysicalDevices(instance, &internalCount, internalDevices.data()), "Failed to retrieve vulkan physical devices!");
+    checkVkResult(pDispatch.EnumeratePhysicalDevices(instance, &internalCount, internalDevices.data()), "Failed to retrieve vulkan physical devices!");
 
     VkPhysicalDevice matchedDevice = VK_NULL_HANDLE;
     VkPhysicalDevice fallbackDevice = VK_NULL_HANDLE;
@@ -384,7 +384,7 @@ VkResult VRLayer::VkInstanceOverrides::EnumeratePhysicalDevices(const vkroots::V
         VkPhysicalDeviceIDProperties deviceId = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES };
         VkPhysicalDeviceProperties2 properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
         properties.pNext = &deviceId;
-        pDispatch->GetPhysicalDeviceProperties2(device, &properties);
+        pDispatch.GetPhysicalDeviceProperties2(device, &properties);
 
         if (deviceId.deviceLUIDValid && memcmp(&VRManager::instance().XR->m_capabilities.adapter, deviceId.deviceLUID, VK_LUID_SIZE) == 0) {
             matchedDevice = device;
@@ -408,7 +408,7 @@ VkResult VRLayer::VkInstanceOverrides::EnumeratePhysicalDevices(const vkroots::V
 
     if (selectedDevice != VK_NULL_HANDLE) {
         VkPhysicalDeviceProperties props = {};
-        pDispatch->GetPhysicalDeviceProperties(selectedDevice, &props);
+        pDispatch.GetPhysicalDeviceProperties(selectedDevice, &props);
         const bool luidMatched = matchedDevice != VK_NULL_HANDLE;
         Log::print<INFO>("Selected Vulkan GPU: '{}' (vendor=0x{:04X}, device=0x{:04X}, type={}, driver={}.{}.{}, api={}.{}.{}) | LUID match: {}",
             props.deviceName,
@@ -440,16 +440,16 @@ VkResult VRLayer::VkInstanceOverrides::EnumeratePhysicalDevices(const vkroots::V
 
 // Some layers (OBS vulkan layer) will skip the vkEnumeratePhysicalDevices hook
 // Therefor we also override vkGetPhysicalDeviceProperties to make any non-compatible VkPhysicalDevice use Vulkan 1.0 which Cemu won't list due to it being too low
-void VRLayer::VkInstanceOverrides::GetPhysicalDeviceProperties(const vkroots::VkInstanceDispatch* pDispatch, VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties* pProperties) {
+void VRLayer::VkInstanceOverrides::GetPhysicalDeviceProperties(const vkroots::VkPhysicalDeviceDispatch& pDispatch, VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties* pProperties) {
     // Do original query
-    pDispatch->GetPhysicalDeviceProperties(physicalDevice, pProperties);
+    pDispatch.GetPhysicalDeviceProperties(physicalDevice, pProperties);
 
     // Do a seperate internal query to make sure that we also query the LUID
     {
         VkPhysicalDeviceIDProperties deviceId = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES };
         VkPhysicalDeviceProperties2 properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
         properties.pNext = &deviceId;
-        pDispatch->GetPhysicalDeviceProperties2(physicalDevice, &properties);
+        pDispatch.GetPhysicalDeviceProperties2(physicalDevice, &properties);
 
         if (deviceId.deviceLUIDValid && memcmp(&VRManager::instance().XR->m_capabilities.adapter, deviceId.deviceLUID, VK_LUID_SIZE) != 0) {
             pProperties->apiVersion = VK_API_VERSION_1_0;
@@ -459,19 +459,19 @@ void VRLayer::VkInstanceOverrides::GetPhysicalDeviceProperties(const vkroots::Vk
 
 // Some layers (OBS vulkan layer) will skip the vkEnumeratePhysicalDevices hook
 // Therefor we also override vkGetPhysicalDeviceQueueFamilyProperties to make any non-VR-compatible VkPhysicalDevice have 0 queues
-void VRLayer::VkInstanceOverrides::GetPhysicalDeviceQueueFamilyProperties(const vkroots::VkInstanceDispatch* pDispatch, VkPhysicalDevice physicalDevice, uint32_t* pQueueFamilyPropertyCount, VkQueueFamilyProperties* pQueueFamilyProperties) {
+void VRLayer::VkInstanceOverrides::GetPhysicalDeviceQueueFamilyProperties(const vkroots::VkPhysicalDeviceDispatch& pDispatch, VkPhysicalDevice physicalDevice, uint32_t* pQueueFamilyPropertyCount, VkQueueFamilyProperties* pQueueFamilyProperties) {
     // Check whether this VkPhysicalDevice matches the LUID that OpenXR returns
     VkPhysicalDeviceIDProperties deviceId = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES };
     VkPhysicalDeviceProperties2 properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
     properties.pNext = &deviceId;
-    pDispatch->GetPhysicalDeviceProperties2(physicalDevice, &properties);
+    pDispatch.GetPhysicalDeviceProperties2(physicalDevice, &properties);
 
     if (deviceId.deviceLUIDValid && memcmp(&VRManager::instance().XR->m_capabilities.adapter, deviceId.deviceLUID, VK_LUID_SIZE) != 0) {
         *pQueueFamilyPropertyCount = 0;
         return;
     }
 
-    return pDispatch->GetPhysicalDeviceQueueFamilyProperties(physicalDevice, pQueueFamilyPropertyCount, pQueueFamilyProperties);
+    return pDispatch.GetPhysicalDeviceQueueFamilyProperties(physicalDevice, pQueueFamilyPropertyCount, pQueueFamilyProperties);
 }
 
 const std::vector<std::string> additionalDeviceExtensions = {
@@ -488,12 +488,12 @@ const std::vector<std::string> additionalDeviceExtensions = {
 #endif
 };
 
-VkResult VRLayer::VkInstanceOverrides::CreateDevice(const vkroots::VkInstanceDispatch* pDispatch, VkPhysicalDevice gpu, const VkDeviceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDevice* pDevice) {
+VkResult VRLayer::VkInstanceOverrides::CreateDevice(const vkroots::VkPhysicalDeviceDispatch& pDispatch, VkPhysicalDevice gpu, const VkDeviceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDevice* pDevice) {
     // Query available extensions for this device
     uint32_t extensionCount = 0;
-    pDispatch->EnumerateDeviceExtensionProperties(gpu, nullptr, &extensionCount, nullptr);
+    pDispatch.EnumerateDeviceExtensionProperties(gpu, nullptr, &extensionCount, nullptr);
     std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-    pDispatch->EnumerateDeviceExtensionProperties(gpu, nullptr, &extensionCount, availableExtensions.data());
+    pDispatch.EnumerateDeviceExtensionProperties(gpu, nullptr, &extensionCount, availableExtensions.data());
 
     auto isExtensionSupported = [&availableExtensions](const std::string& extName) {
         return std::find_if(availableExtensions.begin(), availableExtensions.end(),
@@ -529,7 +529,7 @@ VkResult VRLayer::VkInstanceOverrides::CreateDevice(const vkroots::VkInstanceDis
     supportedImageRobustnessFeatures.pNext = &supportedRobustness2Features;
 #endif
 
-    pDispatch->GetPhysicalDeviceFeatures2(gpu, &supportedFeatures);
+    pDispatch.GetPhysicalDeviceFeatures2(gpu, &supportedFeatures);
 
     // Test if timeline semaphores are already enabled in the create info
     bool timelineSemaphoresEnabled = false;
@@ -605,10 +605,10 @@ VkResult VRLayer::VkInstanceOverrides::CreateDevice(const vkroots::VkInstanceDis
 
     // Log queue family selection for diagnostics
     uint32_t queueFamilyCount = 0;
-    pDispatch->GetPhysicalDeviceQueueFamilyProperties(gpu, &queueFamilyCount, nullptr);
+    pDispatch.GetPhysicalDeviceQueueFamilyProperties(gpu, &queueFamilyCount, nullptr);
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     if (queueFamilyCount > 0) {
-        pDispatch->GetPhysicalDeviceQueueFamilyProperties(gpu, &queueFamilyCount, queueFamilies.data());
+        pDispatch.GetPhysicalDeviceQueueFamilyProperties(gpu, &queueFamilyCount, queueFamilies.data());
     }
 
     Log::print<INFO>("Creating Vulkan device with {} queue infos", modifiedCreateInfo.queueCreateInfoCount);
@@ -622,7 +622,7 @@ VkResult VRLayer::VkInstanceOverrides::CreateDevice(const vkroots::VkInstanceDis
             qci.queueFamilyIndex, qci.queueCount, familyFlags, qci.flags);
     }
 
-    VkResult result = pDispatch->CreateDevice(gpu, &modifiedCreateInfo, pAllocator, pDevice);
+    VkResult result = pDispatch.CreateDevice(gpu, &modifiedCreateInfo, pAllocator, pDevice);
     if (result != VK_SUCCESS) {
         Log::print<ERROR>("Failed to create Vulkan device! Error {}", result);
         return result;
@@ -638,17 +638,8 @@ VkResult VRLayer::VkInstanceOverrides::CreateDevice(const vkroots::VkInstanceDis
     return result;
 }
 
-void VRLayer::VkDeviceOverrides::DestroyDevice(const vkroots::VkDeviceDispatch* pDispatch, VkDevice device, const VkAllocationCallbacks* pAllocator) {
-    return pDispatch->DestroyDevice(device, pAllocator);
+void VRLayer::VkDeviceOverrides::DestroyDevice(const vkroots::VkDeviceDispatch& pDispatch, VkDevice device, const VkAllocationCallbacks* pAllocator) {
+    return pDispatch.DestroyDevice(device, pAllocator);
 }
 
-VKROOTS_DEFINE_LAYER_INTERFACES(VRLayer::VkInstanceOverrides, VRLayer::VkPhysicalDeviceOverrides, VRLayer::VkDeviceOverrides);
-
-// todo: These methods aren't required since we already use the negotiatelayerinterface function, thus can be removed for simplicity
-VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL VRLayer_GetInstanceProcAddr(VkInstance instance, const char* pName) {
-    return vkroots::GetInstanceProcAddr<VRLayer::VkInstanceOverrides, VRLayer::VkPhysicalDeviceOverrides, VRLayer::VkDeviceOverrides>(instance, pName);
-}
-
-VK_LAYER_EXPORT PFN_vkVoidFunction VKAPI_CALL VRLayer_GetDeviceProcAddr(VkDevice device, const char* pName) {
-    return vkroots::GetDeviceProcAddr<VRLayer::VkInstanceOverrides, VRLayer::VkPhysicalDeviceOverrides, VRLayer::VkDeviceOverrides>(device, pName);
-}
+VKROOTS_DEFINE_LAYER_INTERFACES(VRLayer::VkInstanceOverrides, VRLayer::VkDeviceOverrides);

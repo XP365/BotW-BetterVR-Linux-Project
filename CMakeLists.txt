@@ -94,7 +94,6 @@ target_sources(BetterVR_Layer PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rendering/vulkan.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rendering/vulkan.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rendering/vulkan_imgui.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/hooking/compatibility.cpp
 )
 
 # Add graphic pack files to Visual Studio for editing

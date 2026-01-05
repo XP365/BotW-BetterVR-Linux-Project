@@ -254,10 +254,10 @@ void DrawFPSOverlay(RND_Renderer* renderer) {
         const float overheadMs = (float)renderer->GetLastOverheadMs();
 
         // --- 2. Convert to FPS ---
-        const float appFps = appMs > 0.0f ? (1000.0f / appMs) : 0.0f;
+        const float appFps = appMs > 0.0000001f ? (1000.0f / appMs) : 0.0f;
 
         // "Theoretical FPS": How fast you COULD run if you didn't have to wait for V-Sync/OpenXR
-        const float workFps = workMs > 0.0f ? (1000.0f / workMs) : 0.0f;
+        const float workFps = workMs >= 0.0000001f ? (1000.0f / workMs) : 0.0f;
 
         // Calculate percentage of the frame budget used (still useful in % terms)
         const float workPct = predictedDisplayPeriodMs > 0.0f ? (workMs / predictedDisplayPeriodMs) * 100.0f : 0.0f;
@@ -320,12 +320,10 @@ void DrawFPSOverlay(RND_Renderer* renderer) {
         const double thirdFps = predictedHz / 3.0;
         const double fourthFps = predictedHz / 4.0;
         if (ImPlot::BeginPlot("##Frametime", ImVec2(420, 150), ImPlotFlags_NoFrame | ImPlotFlags_NoTitle | ImPlotFlags_NoMouseText | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_NoInputs)) {
-
-            // Switch Y-Axis label to FPS
             ImPlot::SetupAxes(nullptr, "##FPS", ImPlotAxisFlags_NoDecorations, ImPlotAxisFlags_NoInitialFit);
             ImPlot::SetupAxisLimits(ImAxis_X1, 0, 120, ImPlotCond_Always);
 
-            if (targetFps > 0.0f) {
+            if (targetFps >= 0.000000001f) {
                 ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0, predictedHz * 1.5f, ImPlotCond_Always);
 
                 // 1. Target Refresh Rate (Green)

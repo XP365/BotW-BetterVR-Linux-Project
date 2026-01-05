@@ -15,8 +15,8 @@ VkImage s_curr3DDepthImage = VK_NULL_HANDLE;
 
 using namespace VRLayer;
 
-VkResult VkDeviceOverrides::CreateImage(const vkroots::VkDeviceDispatch* pDispatch, VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage) {
-    VkResult res = pDispatch->CreateImage(device, pCreateInfo, pAllocator, pImage);
+VkResult VkDeviceOverrides::CreateImage(const vkroots::VkDeviceDispatch& pDispatch, VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage) {
+    VkResult res = pDispatch.CreateImage(device, pCreateInfo, pAllocator, pImage);
 
     if (pCreateInfo->extent.width >= 1280 && pCreateInfo->extent.height >= 720) {
         lockImageResolutions.lock();
@@ -26,7 +26,7 @@ VkResult VkDeviceOverrides::CreateImage(const vkroots::VkDeviceDispatch* pDispat
     return res;
 }
 
-void VkDeviceOverrides::DestroyImage(const vkroots::VkDeviceDispatch* pDispatch, VkDevice device, VkImage image, const VkAllocationCallbacks* pAllocator) {
+void VkDeviceOverrides::DestroyImage(const vkroots::VkDeviceDispatch& pDispatch, VkDevice device, VkImage image, const VkAllocationCallbacks* pAllocator) {
     lockImageResolutions.lock();
     imageResolutions.erase(image);
     if (s_curr3DColorImage == image) {
@@ -37,10 +37,10 @@ void VkDeviceOverrides::DestroyImage(const vkroots::VkDeviceDispatch* pDispatch,
     }
     lockImageResolutions.unlock();
 
-    pDispatch->DestroyImage(device, image, pAllocator);
+    pDispatch.DestroyImage(device, image, pAllocator);
 }
 
-void VkDeviceOverrides::CmdClearColorImage(const vkroots::VkDeviceDispatch* pDispatch, VkCommandBuffer commandBuffer, VkImage image, VkImageLayout imageLayout, const VkClearColorValue* pColor, uint32_t rangeCount, const VkImageSubresourceRange* pRanges) {
+void VkDeviceOverrides::CmdClearColorImage(const vkroots::VkCommandBufferDispatch& pDispatch, VkCommandBuffer commandBuffer, VkImage image, VkImageLayout imageLayout, const VkClearColorValue* pColor, uint32_t rangeCount, const VkImageSubresourceRange* pRanges) {
     // check whether the magic values are there, and which order they are in to determine which eye
     OpenXR::EyeSide side = (OpenXR::EyeSide)-1;
     if (pColor->float32[1] >= 0.12 && pColor->float32[1] <= 0.13 && pColor->float32[2] >= 0.97 && pColor->float32[2] <= 0.99) {
@@ -51,7 +51,8 @@ void VkDeviceOverrides::CmdClearColorImage(const vkroots::VkDeviceDispatch* pDis
     }
 
     if (!VRManager::instance().VK) {
-        VRManager::instance().Init(pDispatch->pPhysicalDeviceDispatch->Instance, pDispatch->PhysicalDevice, pDispatch->Device);
+        auto* dispatch = pDispatch.pDeviceDispatch;
+        VRManager::instance().Init(dispatch->pPhysicalDeviceDispatch->pInstanceDispatch->Instance, dispatch->PhysicalDevice, dispatch->Device);
         VRManager::instance().InitSession();
     }
 
@@ -66,7 +67,7 @@ void VkDeviceOverrides::CmdClearColorImage(const vkroots::VkDeviceDispatch* pDis
         auto* renderer = VRManager::instance().XR->GetRenderer();
         if (!renderer) {
             Log::print<RENDERING>("Renderer is not initialized yet!");
-            return pDispatch->CmdClearColorImage(commandBuffer, image, imageLayout, pColor, rangeCount, pRanges);
+            return pDispatch.CmdClearColorImage(commandBuffer, image, imageLayout, pColor, rangeCount, pRanges);
         }
         auto& layer3D = renderer->m_layer3D;
         auto& layer2D = renderer->m_layer2D;
@@ -143,7 +144,7 @@ void VkDeviceOverrides::CmdClearColorImage(const vkroots::VkDeviceDispatch* pDis
                     clearColor = {{ 0.0f, 0.0f, 0.0f, 1.0f }};
                 }
                 returnToLayout();
-                return pDispatch->CmdClearColorImage(commandBuffer, image, imageLayout, &clearColor, rangeCount, pRanges);
+                return pDispatch.CmdClearColorImage(commandBuffer, image, imageLayout, &clearColor, rangeCount, pRanges);
             }
 
             if (renderer->GetFrame(frameIdx).copiedColor[side]) {
@@ -152,7 +153,7 @@ void VkDeviceOverrides::CmdClearColorImage(const vkroots::VkDeviceDispatch* pDis
 
                 VkClearColorValue clearColor = {{ 0.0f, 0.0f, 0.0f, 0.0f }};
                 returnToLayout();
-                return pDispatch->CmdClearColorImage(commandBuffer, image, imageLayout, &clearColor, rangeCount, pRanges);
+                return pDispatch.CmdClearColorImage(commandBuffer, image, imageLayout, &clearColor, rangeCount, pRanges);
             }
 
             // note: This uses vkCmdCopyImage to copy the image to the D3D12-created interop texture. s_activeCopyOperations queues a semaphore for the D3D12 side to wait on.
@@ -174,7 +175,7 @@ void VkDeviceOverrides::CmdClearColorImage(const vkroots::VkDeviceDispatch* pDis
             // clear the image to be transparent to allow for the HUD to be rendered on top of it which results in a transparent HUD layer
             VkClearColorValue clearColor = {{ 0.0f, 0.0f, 0.0f, 0.0f }};
             returnToLayout();
-            return pDispatch->CmdClearColorImage(commandBuffer, image, imageLayout, &clearColor, rangeCount, pRanges);
+            return pDispatch.CmdClearColorImage(commandBuffer, image, imageLayout, &clearColor, rangeCount, pRanges);
         }
 
         // 2D layer - color texture for HUD rendering
@@ -188,7 +189,7 @@ void VkDeviceOverrides::CmdClearColorImage(const vkroots::VkDeviceDispatch* pDis
 
                     VkClearColorValue clearColor = {{ 0.0f, 0.0f, 0.0f, 0.0f }};
                     returnToLayout();
-                    return pDispatch->CmdClearColorImage(commandBuffer, image, imageLayout, &clearColor, rangeCount, pRanges);
+                    return pDispatch.CmdClearColorImage(commandBuffer, image, imageLayout, &clearColor, rangeCount, pRanges);
                 }
                 else {
                     // provide the HUD texture to the imgui overlay we'll use to recomposite Cemu's original flatscreen rendering
@@ -231,18 +232,18 @@ void VkDeviceOverrides::CmdClearColorImage(const vkroots::VkDeviceDispatch* pDis
                 if (hudCopied) {
                     // AMD GPU FIX: Use local VkClearColorValue instead of const_cast to avoid UB
                     VkClearColorValue clearColor = {{ 0.0f, 0.0f, 0.0f, 0.0f }};
-                    return pDispatch->CmdClearColorImage(commandBuffer, image, imageLayout, &clearColor, rangeCount, pRanges);
+                    return pDispatch.CmdClearColorImage(commandBuffer, image, imageLayout, &clearColor, rangeCount, pRanges);
                 }
             }
         }
         return;
     }
     else {
-        return pDispatch->CmdClearColorImage(commandBuffer, image, imageLayout, pColor, rangeCount, pRanges);
+        return pDispatch.CmdClearColorImage(commandBuffer, image, imageLayout, pColor, rangeCount, pRanges);
     }
 }
 
-void VkDeviceOverrides::CmdClearDepthStencilImage(const vkroots::VkDeviceDispatch* pDispatch, VkCommandBuffer commandBuffer, VkImage image, VkImageLayout imageLayout, const VkClearDepthStencilValue* pDepthStencil, uint32_t rangeCount, const VkImageSubresourceRange* pRanges) {
+void VkDeviceOverrides::CmdClearDepthStencilImage(const vkroots::VkCommandBufferDispatch& pDispatch, VkCommandBuffer commandBuffer, VkImage image, VkImageLayout imageLayout, const VkClearDepthStencilValue* pDepthStencil, uint32_t rangeCount, const VkImageSubresourceRange* pRanges) {
     // check for magical clear values
     // check order and whether there's a match with the magical clear value
     OpenXR::EyeSide side = (OpenXR::EyeSide)-1;
@@ -323,31 +324,11 @@ void VkDeviceOverrides::CmdClearDepthStencilImage(const vkroots::VkDeviceDispatc
         }
     }
     else {
-        return pDispatch->CmdClearDepthStencilImage(commandBuffer, image, imageLayout, pDepthStencil, rangeCount, pRanges);
+        return pDispatch.CmdClearDepthStencilImage(commandBuffer, image, imageLayout, pDepthStencil, rangeCount, pRanges);
     }
 }
 
-static std::unordered_set<VkSemaphore> s_isTimeline;
-
-VkResult VkDeviceOverrides::CreateSemaphore(const vkroots::VkDeviceDispatch* pDispatch, VkDevice device, const VkSemaphoreCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSemaphore* pSemaphore) {
-    VkResult res = pDispatch->CreateSemaphore(device, pCreateInfo, pAllocator, pSemaphore);
-    if (res == VK_SUCCESS && vkroots::FindInChain<VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO, const VkSemaphoreCreateInfo>(pCreateInfo->pNext)) {
-        s_isTimeline.emplace(*pSemaphore);
-    }
-    return res;
-}
-
-void VkDeviceOverrides::DestroySemaphore(const vkroots::VkDeviceDispatch* pDispatch, VkDevice device, VkSemaphore semaphore, const VkAllocationCallbacks* pAllocator) {
-    s_isTimeline.erase(semaphore);
-    return pDispatch->DestroySemaphore(device, semaphore, pAllocator);
-}
-
-inline bool IsTimeline(const VkSemaphore semaphore) {
-    auto it = s_isTimeline.find(semaphore);
-    return it != s_isTimeline.end();
-}
-
-VkResult VkDeviceOverrides::QueueSubmit(const vkroots::VkDeviceDispatch* pDispatch, VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence) {
+VkResult VkDeviceOverrides::QueueSubmit(const vkroots::VkQueueDispatch& pDispatch, VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence) {
     VkResult result = VK_SUCCESS;
     
     size_t activeCopyCount;
@@ -357,7 +338,7 @@ VkResult VkDeviceOverrides::QueueSubmit(const vkroots::VkDeviceDispatch* pDispat
     }
 
     if (activeCopyCount == 0) {
-        result = pDispatch->QueueSubmit(queue, submitCount, pSubmits, fence);
+        result = pDispatch.QueueSubmit(queue, submitCount, pSubmits, fence);
     }
     else {
         struct ModifiedSubmitInfo_t {
@@ -454,7 +435,7 @@ VkResult VkDeviceOverrides::QueueSubmit(const vkroots::VkDeviceDispatch* pDispat
 
             shadowSubmits[i] = modifiedSubmitInfo.submitInfoCopy;
         }
-        result = pDispatch->QueueSubmit(queue, submitCount, shadowSubmits.data(), fence);
+        result = pDispatch.QueueSubmit(queue, submitCount, shadowSubmits.data(), fence);
     }
 
     if (result != VK_SUCCESS) {
@@ -464,8 +445,16 @@ VkResult VkDeviceOverrides::QueueSubmit(const vkroots::VkDeviceDispatch* pDispat
     return result;
 }
 
-VkResult VkDeviceOverrides::QueuePresentKHR(const vkroots::VkDeviceDispatch* pDispatch, VkQueue queue, const VkPresentInfoKHR* pPresentInfo) {
+VkResult VkDeviceOverrides::QueuePresentKHR(const vkroots::VkQueueDispatch& pDispatch, VkQueue queue, const VkPresentInfoKHR* pPresentInfo) {
     VRManager::instance().XR->ProcessEvents();
 
-    return pDispatch->QueuePresentKHR(queue, pPresentInfo);
+    auto* renderer = VRManager::instance().XR->GetRenderer();
+    if (renderer && renderer->m_layer3D && renderer->m_layer2D && renderer->m_imguiOverlay) {
+        if (renderer->IsInitialized()) {
+            renderer->EndFrame();
+        }
+        renderer->StartFrame();
+    }
+
+    return pDispatch.QueuePresentKHR(queue, pPresentInfo);
 }

@@ -11,13 +11,6 @@ void CemuHooks::hook_BeginCameraSide(PPCInterpreter_t* hCPU) {
     Log::print<RENDERING>("");
     Log::print<RENDERING>("===============================================================================");
     Log::print<RENDERING>("{0} {0} {0} {0} {0} {0} {0} {0} {0} {0} {0} {0} {0} {0} {0} {0} {0} {0}", side);
-
-    RND_Renderer* renderer = VRManager::instance().XR->GetRenderer();
-
-    bool layersInitialized = renderer->m_layer3D && renderer->m_layer2D && renderer->m_imguiOverlay;
-    if (layersInitialized && side == OpenXR::EyeSide::LEFT) {
-        VRManager::instance().XR->GetRenderer()->StartFrame();
-    }
 }
 
 static std::pair<glm::quat, glm::quat> swingTwistY(const glm::quat& q) {
@@ -403,7 +396,6 @@ void CemuHooks::hook_EndCameraSide(PPCInterpreter_t* hCPU) {
 
     // todo: sometimes this can deadlock apparently?
     if (VRManager::instance().XR->GetRenderer()->IsInitialized() && side == OpenXR::EyeSide::RIGHT) {
-        VRManager::instance().XR->GetRenderer()->EndFrame();
         CemuHooks::m_heldWeaponsLastUpdate[0] = CemuHooks::m_heldWeaponsLastUpdate[0]++;
         CemuHooks::m_heldWeaponsLastUpdate[1] = CemuHooks::m_heldWeaponsLastUpdate[1]++;
         if (CemuHooks::m_heldWeaponsLastUpdate[0] >= 6) {

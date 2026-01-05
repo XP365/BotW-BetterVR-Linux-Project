@@ -59,19 +59,3 @@ private:
 
     std::unique_ptr<Log> m_logger;
 };
-
-static VRManager* get_instance(const vkroots::VkInstanceDispatch* pDispatch) {
-    if (pDispatch->UserData == NULL) {
-        return nullptr;
-    }
-    return reinterpret_cast<VRManager*>(pDispatch->UserData);
-}
-
-static VRManager* get_instance(const vkroots::VkDeviceDispatch* pDispatch) {
-    if (pDispatch->UserData == NULL) {
-        return nullptr;
-    }
-    return reinterpret_cast<VRManager*>(pDispatch->UserData);
-}
-
-static_assert(sizeof(vkroots::VkDeviceDispatch::UserData) == sizeof(uint64_t), "UserData pointer size must be 64 bits");

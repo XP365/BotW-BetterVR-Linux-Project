@@ -4,9 +4,9 @@
 #include "utils/logger.h"
 
 RND_Vulkan::RND_Vulkan(VkInstance vkInstance, VkPhysicalDevice vkPhysDevice, VkDevice vkDevice): m_instance(vkInstance), m_physicalDevice(vkPhysDevice), m_device(vkDevice) {
-    m_instanceDispatch = vkroots::tables::LookupInstanceDispatch(vkInstance);
-    m_physicalDeviceDispatch = vkroots::tables::LookupPhysicalDeviceDispatch(vkPhysDevice);
-    m_deviceDispatch = vkroots::tables::LookupDeviceDispatch(vkDevice);
+    m_instanceDispatch = vkroots::tables::InstanceDispatches.find(vkInstance);
+    m_physicalDeviceDispatch = vkroots::tables::PhysicalDeviceDispatches.find(vkPhysDevice);
+    m_deviceDispatch = vkroots::tables::DeviceDispatches.find(vkDevice);
 
     // AMD GPU FIX: Initialize sType before calling vkGetPhysicalDeviceMemoryProperties2
     m_memoryProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2;
@@ -49,6 +49,6 @@ uint32_t RND_Vulkan::FindMemoryType(uint32_t memoryTypeBitsRequirement, VkMemory
 }
 
 
-VkResult VRLayer::VkDeviceOverrides::CreateSwapchainKHR(const vkroots::VkDeviceDispatch* pDispatch, VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain) {
-    return pDispatch->CreateSwapchainKHR(device, pCreateInfo, pAllocator, pSwapchain);
+VkResult VRLayer::VkDeviceOverrides::CreateSwapchainKHR(const vkroots::VkDeviceDispatch& pDispatch, VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain) {
+    return pDispatch.CreateSwapchainKHR(device, pCreateInfo, pAllocator, pSwapchain);
 }

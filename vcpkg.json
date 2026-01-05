@@ -14,7 +14,7 @@
     },
     {
       "name": "vulkan-headers",
-      "version>=": "1.4.304.0#0"
+      "version>=": "1.4.328.0"
     },
     {
       "name": "imgui",

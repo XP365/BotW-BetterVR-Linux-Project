@@ -463,7 +463,7 @@ std::vector<XrCompositionLayerQuad> RND_Renderer::Layer2D::FinishRendering(XrTim
     glm::quat headOrientation = ToGLM(spaceLocation.pose.orientation);
     glm::vec3 headPosition = ToGLM(spaceLocation.pose.position);
 
-    constexpr float DISTANCE = 0.8f;
+    constexpr float DISTANCE = 1.5f;
     constexpr float LERP_SPEED = 0.05f;
 
     if (CemuHooks::GetSettings().UIFollowsLookingDirection()) {

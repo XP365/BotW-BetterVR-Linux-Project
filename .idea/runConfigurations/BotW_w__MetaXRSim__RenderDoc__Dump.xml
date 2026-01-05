@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="BotW w/ MetaXRSim, RenderDoc, Dump" type="CMakeRunConfiguration" factoryName="Application" folderName="Simulator" PROGRAM_PARAMS="-t 00050000101C9500" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="true" EMULATE_TERMINAL="false" WORKING_DIR="file://$PROJECT_DIR$/Cemu" PASS_PARENT_ENVS_2="true" PROJECT_NAME="BetterVR_Layer" TARGET_NAME="BetterVR_Layer" CONFIG_NAME="Debug" RUN_PATH="$PROJECT_DIR$/Cemu/Cemu.exe">
+  <configuration default="false" name="BotW w/ MetaXRSim, RenderDoc, Dump" type="CMakeRunConfiguration" factoryName="Application" folderName="Simulator" PROGRAM_PARAMS="-t 00050000101C9500" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="true" EMULATE_TERMINAL="false" WORKING_DIR="file://$PROJECT_DIR$/Cemu" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="BetterVR_Layer" CONFIG_NAME="Debug" RUN_PATH="$PROJECT_DIR$/Cemu/Cemu.exe">
     <envs>
       <env name="ENABLE_VULKAN_RENDERDOC_CAPTURE" value="0" />
       <env name="VK_APIDUMP_LOG_FILENAME" value="API_DUMP.txt" />

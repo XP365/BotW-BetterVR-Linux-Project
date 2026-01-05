@@ -1,7 +1,4 @@
-set(VCPKG_TARGET_TRIPLET "x64-windows-static")
-set(VCPKG_HOST_TRIPLET "x64-windows-static")
-
-cmake_minimum_required(VERSION 3.27.0)
+cmake_minimum_required(VERSION 3.27)
 project(BetterVR_Layer VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -20,44 +17,35 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 # Set global options
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD 1)
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD 1)
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT BetterVR_Layer)
 
-# Set compilation options
-add_compile_definitions(NOMINMAX)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug>:EditAndContinue>$<$<CONFIG:RelWithDebInfo>:ProgramDatabase>")
+# --- System libraries ---
+# GLM (header-only)
+include_directories(/usr/include/glm)
 
-# Find vcpkg dependencies
-find_path(VULKAN_HEADERS_INCLUDE_DIRS "vk_video/vulkan_video_codec_h264std.h")
-find_package(OpenXR CONFIG REQUIRED)
-find_package(glm CONFIG REQUIRED)
-find_package(imgui CONFIG REQUIRED)
-find_package(implot CONFIG REQUIRED)
-find_package(implot3d CONFIG REQUIRED)
+# Vulkan headers
+include_directories(/usr/include/vulkan)
 
-# Add DLL target
+# OpenXR headers
+include_directories(/usr/include/openxr)
+
+# --- Vendor libraries ---
+add_subdirectory(vendor/imgui)
+add_subdirectory(vendor/implot)
+add_subdirectory(vendor/implot3d)
+
+# --- DLL / Shared library target ---
 add_library(BetterVR_Layer SHARED)
-file(GENERATE OUTPUT "$<TARGET_FILE_DIR:BetterVR_Layer>/BetterVR_Layer.json" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/resources/BetterVR_Layer.json")
 
-# Set VS Debugger Command
-set_target_properties(BetterVR_Layer PROPERTIES
-    VS_DEBUGGER_COMMAND "${CMAKE_INSTALL_PREFIX}/Cemu_relwithdebinfo.exe"
-    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
-    VS_DEBUGGER_ENVIRONMENT "VK_INSTANCE_LAYERS=VK_LAYER_CREMENTIF_bettervr\nVK_LAYER_PATH=$<TARGET_FILE_DIR:BetterVR_Layer>/;"
-)
-
-# Add some flags
-add_link_options(BetterVR_Layer PUBLIC "$<$<CONFIG:Debug>:/INCREMENTAL>")
-
-# Add (precompiled) headers for DLL
+# Precompiled header
 target_precompile_headers(BetterVR_Layer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/pch.h)
+
+# Include directories
 target_include_directories(BetterVR_Layer BEFORE PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(BetterVR_Layer AFTER PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(BetterVR_Layer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/dependencies)
 
-# Add source for DLL
-target_sources(BetterVR_Layer PUBLIC
+# Add source files
+target_sources(BetterVR_Layer PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/instance.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/d3d12_utils.h
@@ -94,9 +82,10 @@ target_sources(BetterVR_Layer PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rendering/vulkan.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rendering/vulkan.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rendering/vulkan_imgui.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/imgui_impl_vulkan.cpp
 )
 
-# Add graphic pack files to Visual Studio for editing
+# Add graphic pack files
 file(GLOB_RECURSE GRAPHIC_PACK_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/BreathOfTheWild_BetterVR/*")
 if(GRAPHIC_PACK_FILES)
     foreach(GRAPHIC_PACK_FILE ${GRAPHIC_PACK_FILES})
@@ -109,24 +98,22 @@ if(GRAPHIC_PACK_FILES)
     target_sources(BetterVR_Layer PRIVATE ${GRAPHIC_PACK_HEADER_FILES})
 endif()
 
-# Add vcpkg dependencies for DLL
-target_link_libraries(BetterVR_Layer PRIVATE OpenXR::headers OpenXR::openxr_loader)
-target_include_directories(BetterVR_Layer SYSTEM PRIVATE ${VULKAN_HEADERS_INCLUDE_DIRS})
-target_link_libraries(BetterVR_Layer PRIVATE glm::glm)
-target_link_libraries(BetterVR_Layer PRIVATE imgui::imgui)
-target_link_libraries(BetterVR_Layer PRIVATE implot::implot)
-target_link_libraries(BetterVR_Layer PRIVATE implot3d::implot3d)
-
-
-# Add manual dependencies for DLL
+# --- Compile definitions / flags ---
 target_compile_definitions(BetterVR_Layer PRIVATE IMGUI_IMPL_VULKAN_NO_PROTOTYPES)
-target_sources(BetterVR_Layer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/imgui_impl_vulkan.cpp)
-target_include_directories(BetterVR_Layer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/dependencies)
 
-# Set install rules
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/BetterVR LAUNCH CEMU IN VR.bat" "${CMAKE_CURRENT_SOURCE_DIR}/resources/BetterVR UNINSTALL.bat" "${CMAKE_CURRENT_SOURCE_DIR}/resources/BetterVR LAUNCH CEMU IN VR - COMPATIBILITY MODE.bat" DESTINATION "${CMAKE_INSTALL_PREFIX}")
+# --- Link system libraries ---
+target_link_libraries(BetterVR_Layer PRIVATE vulkan openxr)
+target_link_libraries(BetterVR_Layer PRIVATE imgui implot implot3d)
+
+# --- Install rules ---
+install(FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/BetterVR LAUNCH CEMU IN VR.bat"
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/BetterVR UNINSTALL.bat"
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/BetterVR LAUNCH CEMU IN VR - COMPATIBILITY MODE.bat"
+    DESTINATION "${CMAKE_INSTALL_PREFIX}"
+)
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/BetterVR_Layer.json" DESTINATION "${CMAKE_INSTALL_PREFIX}")
-#install(CODE "file(REMOVE_RECURSE \"${CMAKE_INSTALL_PREFIX}/graphicPacks/BreathOfTheWild_BetterVR\")")
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/resources/BreathOfTheWild_BetterVR" DESTINATION "${CMAKE_INSTALL_PREFIX}/graphicPacks")
 install(TARGETS BetterVR_Layer DESTINATION "${CMAKE_INSTALL_PREFIX}")
+
 install(FILES $<TARGET_PDB_FILE:BetterVR_Layer> DESTINATION "${CMAKE_INSTALL_PREFIX}" OPTIONAL)
